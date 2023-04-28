@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class HelicopteroScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR}
+    private enum Estado {DESPEGAR, SEGUIRGUIA}
     private Estado estado;
     private const float VELVERT = 0.2f;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
     private float fuerzaLevitacion;
-    private RaycastHit[] detectSens; 
+    private RaycastHit[] detectSens;
+    public GameObject guia;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -26,16 +27,24 @@ public class HelicopteroScript : MonoBehaviour
         alturaDeseada = 10;
         AlcanzarAltura(alturaDeseada, VELVERT);
         Sensores();
+        print("Estado helicoptero: " + estado);
         switch (estado)
         {
             case Estado.DESPEGAR:
                 Despegar();
-            break;
+                break;
+            case Estado.SEGUIRGUIA:
+
+                break;
         }
     }
     private void Despegar()
     {
-
+        if(transform.position.y >= alturaDeseada - 1)
+        {
+            estado = Estado.SEGUIRGUIA;
+            guia.GetComponent<GuiaScript>().CambiarAIrMeta();
+        }
     }
     // Método para hacer que el helicóptero alzance una altura determinada, manejando la variable alturaDeseada.
     private void AlcanzarAltura(float altura, float velocidadVertical)
