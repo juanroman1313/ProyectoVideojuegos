@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class HelicopteroEnemigoScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR,VAGAR,ESQUIVAROBSTACULO }
+    private enum Estado {DESPEGAR,VAGAR,ESQUIVAROBSTACULOFRENTE,ESQUIVAROBSTACULOABAJO }
     private Estado estado;
     private const float VELVERT = 0.2f;
     private float alturaDeseada;
@@ -13,7 +13,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     private float fuerzaLevitacion;
     private RaycastHit[] detectSens;
     private Vector3 posicionDeseada;
-    public float RapidezHorizontal = 1f;
+    public float RapidezHorizontal = 10f;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -26,6 +26,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        Sensores();
         switch (estado)
         {
             case Estado.DESPEGAR:
@@ -33,6 +34,9 @@ public class HelicopteroEnemigoScript : MonoBehaviour
                 break;
             case Estado.VAGAR:
                 Vagar();
+                break;
+            case Estado.ESQUIVAROBSTACULOABAJO:
+                EsquivarObstaculoAbajo();
                 break;
         }
     }
@@ -48,7 +52,23 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     private void Vagar()
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
-        AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 0.2f);
+        AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
+        if (detectSens[0].collider != null)
+        {
+            StopCoroutine("VagarRutina");
+            estado = Estado.ESQUIVAROBSTACULOABAJO;
+        }
+    }
+    private void EsquivarObstaculoAbajo()
+    {
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
+        alturaDeseada += detectSens[0].point.y;
+        if (transform.position.y >= alturaDeseada - 1)
+        {
+            estado = Estado.VAGAR;
+            StartCoroutine("VagarRutina");
+        }
     }
     IEnumerator VagarRutina()
     {
@@ -56,12 +76,12 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         {
             float alturaAleatoria = Random.Range(10, 20);
             alturaDeseada = alturaAleatoria;
-            float posicionAleatoriaX = Random.Range(transform.position.x-20, transform.position.x+20);
-            if (posicionAleatoriaX > 100) posicionAleatoriaX = 100f;
-            if (posicionAleatoriaX < -100) posicionAleatoriaX = -100f;
-            float posicionAleatoriaZ = Random.Range(transform.position.z-20, transform.position.z+20);
-            if (posicionAleatoriaZ > 100) posicionAleatoriaZ = 100f;
-            if (posicionAleatoriaZ < -100) posicionAleatoriaZ = -100f;
+            float posicionAleatoriaX = Random.Range(transform.position.x-10, transform.position.x+10);
+            if (posicionAleatoriaX > 50) posicionAleatoriaX = 50f;
+            if (posicionAleatoriaX < -50) posicionAleatoriaX = -50f;
+            float posicionAleatoriaZ = Random.Range(transform.position.z-10, transform.position.z+10);
+            if (posicionAleatoriaZ > 50) posicionAleatoriaZ = 50f;
+            if (posicionAleatoriaZ < -50) posicionAleatoriaZ = -50f;
             posicionDeseada = new Vector3(posicionAleatoriaX, alturaDeseada, posicionAleatoriaZ);
             yield return new WaitForSeconds(3f);
         }
@@ -96,5 +116,20 @@ public class HelicopteroEnemigoScript : MonoBehaviour
             rb.velocity = rb.velocity * 0.95f;
             rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
         }
+    }
+    // Sensores para detectar objetos del entorno.
+    private bool Sensores()
+    {
+        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -transform.up, out detectSens[0]);
+        Debug.DrawRay(transform.position - transform.up * 0.5f, -transform.up * 10, Color.red);
+        bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, transform.forward, out detectSens[1]);
+        Debug.DrawRay(transform.position + transform.forward * 2.5f, transform.forward * 10, Color.red);
+        bool d3 = Physics.Raycast(transform.position + transform.right * 2f, transform.right, out detectSens[2]);
+        Debug.DrawRay(transform.position + transform.right * 2f, transform.right * 10, Color.red);
+        bool d4 = Physics.Raycast(transform.position - transform.forward * 4.5f, -transform.forward, out detectSens[3]);
+        Debug.DrawRay(transform.position - transform.forward * 4.5f, -transform.forward * 10, Color.red);
+        bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
+        Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
+        return d1 || d2 || d3 || d4 || d5;
     }
 }
