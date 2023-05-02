@@ -7,6 +7,7 @@ public class HelicopteroScript : MonoBehaviour
     private enum Estado {DESPEGAR, SEGUIRGUIA}
     private Estado estado;
     private const float VELVERT = 0.2f;
+    private const float VELHOR = 10f;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
@@ -34,7 +35,7 @@ public class HelicopteroScript : MonoBehaviour
                 Despegar();
                 break;
             case Estado.SEGUIRGUIA:
-
+                AlcanzarPosicion(guia, VELHOR);
                 break;
         }
     }
@@ -76,5 +77,23 @@ public class HelicopteroScript : MonoBehaviour
         bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
         Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
+    }
+    private void AlcanzarPosicion(GameObject objeto, float velocidadHorizontal)
+    {
+        // Posición objeto teniendo en cuenta la altura del helicóptero.
+        Vector3 posObj = new Vector3(objeto.transform.position.x, transform.position.y, objeto.transform.position.z);
+        Vector3 vectorDireccionObjetivo = posObj - transform.position;
+        float velRel = objeto.GetComponent<Rigidbody>().velocity.magnitude - rb.velocity.magnitude;
+        float anguloVDirYVVel = Vector3.Angle(vectorDireccionObjetivo, rb.velocity);
+        if(velRel > 0 || anguloVDirYVVel < 70)
+        {
+            float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
+            rb.AddForce(vectorDireccionObjetivo * factor);
+            transform.LookAt(posObj);
+        }
+        else
+        {
+            rb.AddForce(vectorDireccionObjetivo * masa * 10);
+        }
     }
 }
