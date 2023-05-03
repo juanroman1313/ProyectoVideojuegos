@@ -19,7 +19,7 @@ public class HelicopteroScript : MonoBehaviour
         estado = Estado.DESPEGAR;
         alturaDeseada = 0;
         rb = GetComponent<Rigidbody>();
-        masa = rb.mass; // Masa del helicoptero (1000 Kg)
+        masa = rb.mass + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
     }
@@ -89,7 +89,7 @@ public class HelicopteroScript : MonoBehaviour
         {
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(vectorDireccionObjetivo * factor);
-            transform.LookAt(posObj);
+            //transform.LookAt(posObj);
         }
         else
         {
