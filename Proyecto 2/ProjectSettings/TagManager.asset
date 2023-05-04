@@ -6,6 +6,7 @@ TagManager:
   tags:
   - montana
   - helicoptero
+  - edificio
   layers:
   - Default
   - TransparentFX

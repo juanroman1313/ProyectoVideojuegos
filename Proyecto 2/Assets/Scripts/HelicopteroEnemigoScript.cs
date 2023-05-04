@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class HelicopteroEnemigoScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR,VAGAR,ESQUIVAROBSTACULOFRENTE,ESQUIVAROBSTACULOABAJO }
-    private Estado estado;
+    public enum Estado {DESPEGAR,VAGAR,ESQUIVAROBSTACULOFRENTE,ESQUIVAROBSTACULOABAJO }
+    public Estado estado;
     private const float VELVERT = 0.2f;
     private float alturaDeseada;
     private Rigidbody rb;
@@ -53,21 +54,34 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
         AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
-        if (detectSens[0].collider != null)
+        if (detectSens[0].collider.tag=="Edificio")
         {
             StopCoroutine("VagarRutina");
+            StartCoroutine("EsquivarAbajoRutina");
             estado = Estado.ESQUIVAROBSTACULOABAJO;
         }
     }
     private void EsquivarObstaculoAbajo()
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
+        posicionDeseada = transform.forward + new Vector3(0, 0, 10);
         AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
-        alturaDeseada += detectSens[0].point.y;
-        if (transform.position.y >= alturaDeseada - 1)
+        if (detectSens[0].distance>=10)
+        {
+            StopCoroutine("EsquivarAbajoRutina");
+        }
+        if (detectSens[0].distance >= 20)
         {
             estado = Estado.VAGAR;
             StartCoroutine("VagarRutina");
+        }
+    }
+    IEnumerator EsquivarAbajoRutina()
+    {
+        while (true)
+        {
+            alturaDeseada++;
+            yield return new WaitForSeconds(0.2f);
         }
     }
     IEnumerator VagarRutina()
@@ -109,11 +123,22 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         {
             float factor = vectorHaciaObjetivo.magnitude * rapidezHorizontal;
             rb.AddForce(vectorHaciaObjetivo * propulsionFrontal * factor);
-            rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
+            //rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
+
+
+            // Obtiene la dirección hacia el objetivo
+            Vector3 targetDirection = new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z) - transform.position;
+
+            // Calcula la rotación hacia el objetivo
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+
+            // Interpola la rotación actual hacia la rotación del objetivo
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 0.2f);
         }
         else
         { //Ir frenando... Tarea: cambiar la siguiente instrucción por rb.addForce... con el mismo efecto.
             rb.velocity = rb.velocity * 0.95f;
+            rb.transform.position = Vector3.Lerp(transform.position, new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z), 0.8f);
             rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
         }
     }
