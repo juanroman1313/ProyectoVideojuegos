@@ -15,6 +15,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     private RaycastHit[] detectSens;
     private Vector3 posicionDeseada;
     public float RapidezHorizontal = 10f;
+    public GameObject guia;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -37,7 +38,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
                 Vagar();
                 break;
             case Estado.ESQUIVAROBSTACULOABAJO:
-                EsquivarObstaculoAbajo();
+                //EsquivarObstaculoAbajo();
                 break;
         }
     }
@@ -47,20 +48,28 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         if (transform.position.y >= alturaDeseada - 1)
         {
             estado = Estado.VAGAR;
-            StartCoroutine("VagarRutina");
+            guia.GetComponent<GuiaEnemigoScript>().CambiarAIrMeta();
+            //StartCoroutine("VagarRutina");
         }
     }
     private void Vagar()
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
-        AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
+        AlcanzarPosicion(guia, RapidezHorizontal);
+        if (Vector3.Distance(detectSens[0].point, guia.transform.position)<2)
+        {
+            guia.GetComponent<GuiaEnemigoScript>().CambiarDestino();
+        }
+        /*
         if (detectSens[0].collider.tag=="Edificio")
         {
             StopCoroutine("VagarRutina");
             StartCoroutine("EsquivarAbajoRutina");
             estado = Estado.ESQUIVAROBSTACULOABAJO;
         }
+        */
     }
+    /*
     private void EsquivarObstaculoAbajo()
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
@@ -76,6 +85,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
             StartCoroutine("VagarRutina");
         }
     }
+    */
     IEnumerator EsquivarAbajoRutina()
     {
         while (true)
@@ -114,32 +124,23 @@ public class HelicopteroEnemigoScript : MonoBehaviour
             rb.AddForce(Vector3.up * fuerzaLevitacion * factor * 10);
         }
     }
-    private void AlcanzarPosicion(Vector3 posObjetivo, float rapidezHorizontal, float propulsionFrontal)
+    private void AlcanzarPosicion(GameObject objeto, float velocidadHorizontal)
     {
-        Vector3 vectorHaciaObjetivo = posObjetivo - transform.position;
-        float velocidadRelativa = 10f;
-        float angulo = Vector3.Angle(vectorHaciaObjetivo, GetComponent<Rigidbody>().velocity);
-        if ((velocidadRelativa > 0) || (angulo < 70))
+        // Posición objeto teniendo en cuenta la altura del helicóptero.
+        Vector3 posObj = new Vector3(objeto.transform.position.x, transform.position.y, objeto.transform.position.z);
+        Vector3 vectorDireccionObjetivo = posObj - transform.position;
+        float velRel = objeto.GetComponent<Rigidbody>().velocity.magnitude - rb.velocity.magnitude;
+        float anguloVDirYVVel = Vector3.Angle(vectorDireccionObjetivo, rb.velocity);
+        if (velRel > 0 || anguloVDirYVVel < 70)
         {
-            float factor = vectorHaciaObjetivo.magnitude * rapidezHorizontal;
-            rb.AddForce(vectorHaciaObjetivo * propulsionFrontal * factor);
-            //rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
-
-
-            // Obtiene la dirección hacia el objetivo
-            Vector3 targetDirection = new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z) - transform.position;
-
-            // Calcula la rotación hacia el objetivo
-            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
-
-            // Interpola la rotación actual hacia la rotación del objetivo
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 0.2f);
+            float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
+            rb.AddForce(vectorDireccionObjetivo * factor);
+            rb.transform.LookAt(posObj);
         }
         else
-        { //Ir frenando... Tarea: cambiar la siguiente instrucción por rb.addForce... con el mismo efecto.
-            rb.velocity = rb.velocity * 0.95f;
-            rb.transform.position = Vector3.Lerp(transform.position, new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z), 0.8f);
-            rb.transform.LookAt(new Vector3(posObjetivo.x, rb.transform.position.y, posObjetivo.z));
+        {
+            rb.AddForce(vectorDireccionObjetivo * masa * 10);
+            rb.AddForce(-rb.velocity* 5 * masa);
         }
     }
     // Sensores para detectar objetos del entorno.
