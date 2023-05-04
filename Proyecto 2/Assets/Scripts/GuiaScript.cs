@@ -26,6 +26,7 @@ public class GuiaScript : MonoBehaviour
                 BajoHelicoptero();
                 break;
             case Estado.IRMETA:
+                agente.destination = meta.transform.position;
                 break;
         }
     }
