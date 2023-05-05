@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -9,6 +10,7 @@ public class HelicopteroScript : MonoBehaviour
     private Estado estado;
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
+    private const float VELGIR = 1000f;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
@@ -21,7 +23,7 @@ public class HelicopteroScript : MonoBehaviour
         estado = Estado.DESPEGAR;
         alturaDeseada = 0;
         rb = GetComponent<Rigidbody>();
-        masa = rb.mass + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
+        masa = rb.mass/* + 10*/; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
@@ -96,7 +98,8 @@ public class HelicopteroScript : MonoBehaviour
             if (Vector3.Distance(transform.position, posObj) >= 3) // Si la distancia es mayor a 3, debemos girarnos para volver
                                                                    // atrás, ya que nos hemos pasado demasiado.
             {
-                transform.LookAt(posObj);
+                //transform.LookAt(posObj);
+                giroFisico(vectorDireccionObjetivo, VELGIR);
                 rb.AddForce(transform.forward * masa * 10);
                 print("Me paso con distancia mayor a 3.");
             }
@@ -127,10 +130,24 @@ public class HelicopteroScript : MonoBehaviour
         }
         else            // En cualquier otro caso aceleramos hacia el objeto guia.
         {
-            transform.LookAt(posObj);
+            //transform.LookAt(posObj);
+            giroFisico(vectorDireccionObjetivo, VELGIR);
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(transform.forward * factor);
             print("Acelerar.");
         }
+    }
+    private void giroFisico(Vector3 vectorDir, float velocidadGiro)
+    {
+
+        Vector3 perpYObjPos = Vector3.Cross(Vector3.up, vectorDir);
+        Vector3 perpYObjNeg = - Vector3.Cross(Vector3.up, vectorDir);
+        float anguloPos = Vector3.Angle(perpYObjPos, transform.forward);
+        float anguloNeg = Vector3.Angle(perpYObjNeg, transform.forward);
+        Vector3 ejeGiro = Vector3.up;
+        if(anguloPos < anguloNeg){
+            ejeGiro *= -1;
+        }
+        rb.AddRelativeTorque(ejeGiro * velocidadGiro);
     }
 }
