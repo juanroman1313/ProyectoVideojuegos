@@ -5,7 +5,7 @@ using static UnityEngine.GraphicsBuffer;
 
 public class HelicopteroEnemigoScript : MonoBehaviour
 {
-    public enum Estado {DESPEGAR,VAGAR,ESQUIVAROBSTACULOFRENTE,ESQUIVAROBSTACULOABAJO }
+    public enum Estado {DESPEGAR,VAGAR,ESQUIVAR }
     public Estado estado;
     private const float VELVERT = 0.2f;
     private float alturaDeseada;
@@ -16,6 +16,9 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     private Vector3 posicionDeseada;
     public float RapidezHorizontal = 10f;
     public GameObject guia;
+
+    private bool edificioObstaculo;
+    private float tiempoSubida;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -25,6 +28,8 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         posicionDeseada = transform.position;
+        edificioObstaculo = false;
+        tiempoSubida = 0f;
     }
     private void FixedUpdate()
     {
@@ -37,8 +42,8 @@ public class HelicopteroEnemigoScript : MonoBehaviour
             case Estado.VAGAR:
                 Vagar();
                 break;
-            case Estado.ESQUIVAROBSTACULOABAJO:
-                //EsquivarObstaculoAbajo();
+            case Estado.ESQUIVAR:
+                Esquivar();
                 break;
         }
     }
@@ -49,7 +54,6 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         {
             estado = Estado.VAGAR;
             guia.GetComponent<GuiaEnemigoScript>().CambiarAIrMeta();
-            //StartCoroutine("VagarRutina");
         }
     }
     private void Vagar()
@@ -59,55 +63,40 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         if (Vector3.Distance(detectSens[0].point, guia.transform.position)<2)
         {
             guia.GetComponent<GuiaEnemigoScript>().CambiarDestino();
+            alturaDeseada = 10f;
         }
-        /*
-        if (detectSens[0].collider.tag=="Edificio")
+        if (ObstaculoDetectado())
         {
-            StopCoroutine("VagarRutina");
-            StartCoroutine("EsquivarAbajoRutina");
-            estado = Estado.ESQUIVAROBSTACULOABAJO;
+            estado = Estado.ESQUIVAR;
+            edificioObstaculo = true;
+            StartCoroutine("AumentarAltura");
         }
-        */
     }
-    /*
-    private void EsquivarObstaculoAbajo()
+    
+    private void Esquivar()
     {
+        print(tiempoSubida);
         AlcanzarAltura(alturaDeseada, VELVERT);
-        posicionDeseada = transform.forward + new Vector3(0, 0, 10);
-        AlcanzarPosicion(posicionDeseada, RapidezHorizontal, 2f);
-        if (detectSens[0].distance>=10)
+        if (edificioObstaculo && !ObstaculoDetectado())
         {
-            StopCoroutine("EsquivarAbajoRutina");
+            tiempoSubida = 0f;
+            edificioObstaculo = false;
+        }else if (!ObstaculoDetectado())
+        {
+            tiempoSubida += Time.deltaTime;
         }
-        if (detectSens[0].distance >= 20)
+        if (tiempoSubida >= 5)
         {
             estado = Estado.VAGAR;
-            StartCoroutine("VagarRutina");
+            StopCoroutine("AumentarAltura");
         }
     }
-    */
-    IEnumerator EsquivarAbajoRutina()
+    IEnumerator AumentarAltura()
     {
         while (true)
         {
-            alturaDeseada++;
-            yield return new WaitForSeconds(0.2f);
-        }
-    }
-    IEnumerator VagarRutina()
-    {
-        while (true)
-        {
-            float alturaAleatoria = Random.Range(10, 20);
-            alturaDeseada = alturaAleatoria;
-            float posicionAleatoriaX = Random.Range(transform.position.x-10, transform.position.x+10);
-            if (posicionAleatoriaX > 50) posicionAleatoriaX = 50f;
-            if (posicionAleatoriaX < -50) posicionAleatoriaX = -50f;
-            float posicionAleatoriaZ = Random.Range(transform.position.z-10, transform.position.z+10);
-            if (posicionAleatoriaZ > 50) posicionAleatoriaZ = 50f;
-            if (posicionAleatoriaZ < -50) posicionAleatoriaZ = -50f;
-            posicionDeseada = new Vector3(posicionAleatoriaX, alturaDeseada, posicionAleatoriaZ);
-            yield return new WaitForSeconds(3f);
+            alturaDeseada += 0.5f;
+            yield return new WaitForSeconds(0.1f);
         }
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)
@@ -139,7 +128,8 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         }
         else
         {
-            rb.AddForce(vectorDireccionObjetivo * masa * 10);
+            rb.transform.LookAt(posObj);
+            rb.AddForce(transform.forward * masa * 10);
             rb.AddForce(-rb.velocity* 5 * masa);
         }
     }
@@ -157,5 +147,21 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
         Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
+    }
+    private bool ObstaculoDetectado()
+    {
+        bool obstaculo = false;
+        print("pepe");
+        for(int i=1;i<detectSens.Length;i++)
+        {
+            RaycastHit hit = detectSens[i];
+            if (hit.distance <= 5 && (hit.collider!=null&&(hit.collider.CompareTag("edificio")|| hit.collider.CompareTag("montana"))))
+            {
+                print(hit.collider.tag);
+                obstaculo = true;
+                break;
+            }
+        }
+        return obstaculo;
     }
 }
