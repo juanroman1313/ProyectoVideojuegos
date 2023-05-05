@@ -18,6 +18,7 @@ public class HelicopteroScript : MonoBehaviour
     private RaycastHit[] detectSens;
     public GameObject guia;
     public GameObject engancheCadena;
+    private bool giroDerecha;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -27,6 +28,7 @@ public class HelicopteroScript : MonoBehaviour
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
+        giroDerecha = false;
     }
     private void FixedUpdate()
     {
@@ -147,6 +149,19 @@ public class HelicopteroScript : MonoBehaviour
         Vector3 ejeGiro = Vector3.up;
         if(anguloPos < anguloNeg){
             ejeGiro *= -1;
+            if (giroDerecha)
+            {
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
+                giroDerecha = false;
+            }
+        }
+        else
+        {
+            if (!giroDerecha)
+            {
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
+                giroDerecha = true;
+            }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
     }
