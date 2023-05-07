@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public class HelicopteroScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR, SEGUIRGUIA}
+    private enum Estado {DESPEGAR, SEGUIRGUIA, ESQUIVAR}
     private Estado estado;
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
@@ -44,6 +44,9 @@ public class HelicopteroScript : MonoBehaviour
                 break;
             case Estado.SEGUIRGUIA:
                 AlcanzarPosicion(guia, VELHOR);
+                break;
+            case Estado.ESQUIVAR:
+                EsquivarObstaculo();
                 break;
         }
     }
@@ -165,5 +168,9 @@ public class HelicopteroScript : MonoBehaviour
             }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+    }
+    private void EsquivarObstaculo()
+    {
+
     }
 }
