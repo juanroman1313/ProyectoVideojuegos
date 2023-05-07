@@ -11,6 +11,7 @@ public class HelicopteroScript : MonoBehaviour
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
     private const float VELGIR = 1000f;
+    private const float ALTURABASE = 10;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
@@ -32,7 +33,7 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        alturaDeseada = 10;
+        alturaDeseada = ALTURABASE;
         AlcanzarAltura(alturaDeseada, VELVERT);
         Sensores();
         print("Estado helicoptero: " + estado);
