@@ -25,10 +25,10 @@ public class HelicopteroScript : MonoBehaviour
         estado = Estado.DESPEGAR;
         alturaDeseada = 0;
         rb = GetComponent<Rigidbody>();
-        masa = rb.mass/* + 10*/; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
+        masa = rb.mass + 5 * 9 + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
-        engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
+        //engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
         giroDerecha = false;
     }
     private void FixedUpdate()
@@ -145,7 +145,6 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void giroFisico(Vector3 vectorDir, float velocidadGiro)
     {
-
         Vector3 perpYObjPos = Vector3.Cross(Vector3.up, vectorDir);
         Vector3 perpYObjNeg = - Vector3.Cross(Vector3.up, vectorDir);
         float anguloPos = Vector3.Angle(perpYObjPos, transform.forward);
