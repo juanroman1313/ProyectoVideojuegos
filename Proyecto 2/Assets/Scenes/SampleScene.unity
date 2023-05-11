@@ -6598,7 +6598,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!4 &1713401997
 Transform:
@@ -6635,7 +6635,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   estado: 0
-  RapidezHorizontal: 1
   guia: {fileID: 1715420887}
 --- !u!1 &1715420887
 GameObject:
