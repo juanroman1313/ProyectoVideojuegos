@@ -21,7 +21,6 @@ public class HelicopteroEnemigoScript : MonoBehaviour
 
     private bool edificioObstaculo;
     private float tiempoSubida;
-    private bool giroDerecha;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -33,7 +32,6 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         posicionDeseada = transform.position;
         edificioObstaculo = false;
         tiempoSubida = 0f;
-        giroDerecha = false;
     }
     private void FixedUpdate()
     {
@@ -149,6 +147,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         {
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(vectorDireccionObjetivo * factor);
+            noGirar(VELGIR); // frenamos el giro.
             print("Mantener posición.");
         }
         else if (Vector3.Distance(transform.position, posObj) < rb.velocity.magnitude
@@ -182,21 +181,32 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         if (anguloPos < anguloNeg)
         {
             ejeGiro *= -1;
-            if (giroDerecha)
+            if (rb.angularVelocity.y > 0)
             {
                 rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
-                giroDerecha = false;
             }
         }
         else
         {
-            if (!giroDerecha)
+            if (rb.angularVelocity.y < 0)
             {
                 rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
-                giroDerecha = true;
             }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+    }
+    private void noGirar(float velocidadGiro)
+    {
+        Vector3 ejeGiro = Vector3.up; // Eje en el que vamos a girar.
+        if (rb.angularVelocity.y > 0) // si estamos girando hacia la derecha, hacemos fuerza hacia la izquierda.
+        {
+            ejeGiro *= -1;
+            rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+        }
+        else if (rb.angularVelocity.y < 0) // si estamos girando hacia la izquierda, hacemos fuerza hacia la derecha.
+        {
+            rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+        }
     }
     // Sensores para detectar objetos del entorno.
     private bool Sensores()

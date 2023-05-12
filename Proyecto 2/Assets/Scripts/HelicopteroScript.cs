@@ -19,7 +19,6 @@ public class HelicopteroScript : MonoBehaviour
     private RaycastHit[] detectSens;
     public GameObject guia;
     public GameObject engancheCadena;
-    private bool giroDerecha;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -29,7 +28,6 @@ public class HelicopteroScript : MonoBehaviour
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         //engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
-        giroDerecha = false;
     }
     private void FixedUpdate()
     {
@@ -121,6 +119,7 @@ public class HelicopteroScript : MonoBehaviour
         {
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(vectorDireccionObjetivo * factor);
+            noGirar(VELGIR); // frenamos el giro.
             print("Mantener posición.");
         }
         else if(Vector3.Distance(transform.position, posObj) < rb.velocity.magnitude
@@ -145,28 +144,42 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void giroFisico(Vector3 vectorDir, float velocidadGiro)
     {
+        // Calculamos el producto escalar del vector3.up y el vector dirección hacia el objetivo.
+        // Obtenemos el positivo y el negativo.
         Vector3 perpYObjPos = Vector3.Cross(Vector3.up, vectorDir);
         Vector3 perpYObjNeg = - Vector3.Cross(Vector3.up, vectorDir);
+        // Calculamos para cada vector, el ángulo con el transform.forward del helicoptero.
         float anguloPos = Vector3.Angle(perpYObjPos, transform.forward);
         float anguloNeg = Vector3.Angle(perpYObjNeg, transform.forward);
-        Vector3 ejeGiro = Vector3.up;
-        if(anguloPos < anguloNeg){
+        Vector3 ejeGiro = Vector3.up; // Eje en el que vamos a girar.
+        if(anguloPos < anguloNeg){ // Si el ángulo con el vector positivo es menor, giramos hacia la izquierda, si no, hacia la derecha.
             ejeGiro *= -1;
-            if (giroDerecha)
+            if (rb.angularVelocity.y > 0) // Si nos pasamos, corregimos haciendo un frenado más fuerte.
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
-                giroDerecha = false;
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 5);
             }
         }
         else
         {
-            if (!giroDerecha)
+            if (rb.angularVelocity.y < 0)
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
-                giroDerecha = true;
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 5);
             }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+    }
+    private void noGirar(float velocidadGiro)
+    {
+        Vector3 ejeGiro = Vector3.up; // Eje en el que vamos a girar.
+        if (rb.angularVelocity.y > 0) // si estamos girando hacia la derecha, hacemos fuerza hacia la izquierda.
+        {
+            ejeGiro *= -1;
+            rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+        }
+        else if (rb.angularVelocity.y < 0) // si estamos girando hacia la izquierda, hacemos fuerza hacia la derecha.
+        {
+            rb.AddRelativeTorque(ejeGiro * velocidadGiro);
+        }
     }
     private void EsquivarObstaculo()
     {
