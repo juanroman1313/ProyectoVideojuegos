@@ -172,7 +172,6 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     }
     private void giroFisico(Vector3 vectorDir, float velocidadGiro)
     {
-
         Vector3 perpYObjPos = Vector3.Cross(Vector3.up, vectorDir);
         Vector3 perpYObjNeg = -Vector3.Cross(Vector3.up, vectorDir);
         float anguloPos = Vector3.Angle(perpYObjPos, transform.forward);
@@ -183,14 +182,14 @@ public class HelicopteroEnemigoScript : MonoBehaviour
             ejeGiro *= -1;
             if (rb.angularVelocity.y > 0)
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 2);
             }
         }
         else
         {
             if (rb.angularVelocity.y < 0)
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 50);
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 2);
             }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);

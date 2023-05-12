@@ -19,6 +19,9 @@ public class HelicopteroScript : MonoBehaviour
     private RaycastHit[] detectSens;
     public GameObject guia;
     public GameObject engancheCadena;
+
+    private bool edificioObstaculo;
+    private float tiempoSubida;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -28,6 +31,8 @@ public class HelicopteroScript : MonoBehaviour
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         //engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
+        edificioObstaculo = false;
+        tiempoSubida = 0f;
     }
     private void FixedUpdate()
     {
@@ -41,10 +46,10 @@ public class HelicopteroScript : MonoBehaviour
                 Despegar();
                 break;
             case Estado.SEGUIRGUIA:
-                AlcanzarPosicion(guia, VELHOR);
+                SeguirGuia();
                 break;
             case Estado.ESQUIVAR:
-                EsquivarObstaculo();
+                Esquivar();
                 break;
         }
     }
@@ -86,6 +91,60 @@ public class HelicopteroScript : MonoBehaviour
         bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
         Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
+    }
+    private void SeguirGuia()
+    {
+        if (ObstaculoDetectado())
+        {
+            estado = Estado.ESQUIVAR;
+            edificioObstaculo = true;
+            StartCoroutine("AumentarAltura");
+            return;
+        }
+        AlcanzarPosicion(guia, VELHOR);
+    }
+    private void Esquivar()
+    {
+        // print(tiempoSubida);
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        if (edificioObstaculo && !ObstaculoDetectado())
+        {
+            tiempoSubida = 0f;
+            edificioObstaculo = false;
+        }
+        else if (!ObstaculoDetectado())
+        {
+            tiempoSubida += Time.deltaTime;
+        }
+        if (tiempoSubida >= 5)
+        {
+            estado = Estado.SEGUIRGUIA;
+            StopCoroutine("AumentarAltura");
+        }
+    }
+    IEnumerator AumentarAltura()
+    {
+        while (true)
+        {
+            alturaDeseada += 0.3f;
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+    private bool ObstaculoDetectado()
+    {
+        bool obstaculo = false;
+        // print("pepe");
+        for (int i = 1; i < detectSens.Length; i++)
+        {
+            RaycastHit hit = detectSens[i];
+            if (hit.distance <= 5 && (hit.collider != null && (hit.collider.CompareTag("edificio") || hit.collider.CompareTag("montana"))))
+            {
+                print(hit.collider.tag);
+                obstaculo = true;
+                break;
+            }
+        }
+        return obstaculo;
     }
     private void AlcanzarPosicion(GameObject objeto, float velocidadHorizontal)
     {
@@ -156,14 +215,14 @@ public class HelicopteroScript : MonoBehaviour
             ejeGiro *= -1;
             if (rb.angularVelocity.y > 0) // Si nos pasamos, corregimos haciendo un frenado más fuerte.
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 5);
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 2);
             }
         }
         else
         {
             if (rb.angularVelocity.y < 0)
             {
-                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 5);
+                rb.AddRelativeTorque(ejeGiro * velocidadGiro * 2);
             }
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
@@ -180,9 +239,5 @@ public class HelicopteroScript : MonoBehaviour
         {
             rb.AddRelativeTorque(ejeGiro * velocidadGiro);
         }
-    }
-    private void EsquivarObstaculo()
-    {
-
     }
 }
