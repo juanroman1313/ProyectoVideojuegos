@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028328, g: 0.22571322, b: 0.30692163, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -264,8 +264,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -1593,8 +1593,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -3780,8 +3780,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -3932,8 +3932,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -4889,8 +4889,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -5776,8 +5776,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -5928,8 +5928,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0
@@ -6555,8 +6555,8 @@ HingeJoint:
     freeSpin: 0
   m_UseLimits: 0
   m_Limits:
-    min: -22.5
-    max: 22.5
+    min: -1
+    max: 1
     bounciness: 0
     bounceMinVelocity: 0.2
     contactDistance: 0

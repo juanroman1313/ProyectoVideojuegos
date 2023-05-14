@@ -11,7 +11,7 @@ public class HelicopteroScript : MonoBehaviour
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
     private const float VELGIR = 1000f;
-    private const float ALTURABASE = 10;
+    private const float ALTURABASE = 8;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
@@ -22,6 +22,7 @@ public class HelicopteroScript : MonoBehaviour
 
     private float distanciaObstaculo;
     private float t;
+    private bool alturaObt;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -79,16 +80,16 @@ public class HelicopteroScript : MonoBehaviour
     // Sensores para detectar objetos del entorno.
     private bool Sensores()
     {
-        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -transform.up, out detectSens[0]);
-        Debug.DrawRay(transform.position - transform.up * 0.5f, -transform.up * 10, Color.red);
-        bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, transform.forward, out detectSens[1]);
-        Debug.DrawRay(transform.position + transform.forward * 2.5f, transform.forward * 10, Color.red);
-        bool d3 = Physics.Raycast(transform.position + transform.right * 2f, transform.right, out detectSens[2]);
-        Debug.DrawRay(transform.position + transform.right * 2f, transform.right * 10, Color.red);
-        bool d4 = Physics.Raycast(transform.position - transform.forward * 4.5f, -transform.forward, out detectSens[3]);
-        Debug.DrawRay(transform.position - transform.forward * 4.5f, -transform.forward * 10, Color.red);
-        bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
-        Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
+        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -Vector3.up, out detectSens[0]);
+        Debug.DrawRay(transform.position - transform.up * 0.5f, -Vector3.up * 10, Color.red);
+        bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z), out detectSens[1]);
+        Debug.DrawRay(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z) * 10, Color.red);
+        bool d3 = Physics.Raycast(transform.position + transform.right * 2f, new Vector3(transform.right.x, 0, transform.right.z), out detectSens[2]);
+        Debug.DrawRay(transform.position + transform.right * 2f, new Vector3(transform.right.x, 0, transform.right.z) * 10, Color.red);
+        bool d4 = Physics.Raycast(transform.position - transform.forward * 4.5f, -new Vector3(transform.forward.x, 0, transform.forward.z), out detectSens[3]);
+        Debug.DrawRay(transform.position - transform.forward * 4.5f, -new Vector3(transform.forward.x, 0, transform.forward.z) * 10, Color.red);
+        bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -new Vector3(transform.right.x, 0, transform.right.z), out detectSens[4]);
+        Debug.DrawRay(transform.position - transform.right * 2f, -new Vector3(transform.right.x, 0, transform.right.z) * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
     }
     private void SeguirGuia()
@@ -101,13 +102,33 @@ public class HelicopteroScript : MonoBehaviour
             StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad));
             return;
         }
+        if(alturaDeseada != ALTURABASE && Time.time > t + 3 && !ObstaculoAbajo())
+        {
+            alturaDeseada = ALTURABASE;
+        }
+        if (ObstaculoAbajo())
+        {
+            print("edificio abajo.");
+            if (!alturaObt)
+            {
+                alturaDeseada = transform.position.y;
+                alturaObt = true;
+            }
+            t = Time.time;
+        }
+        else
+        {
+            alturaObt = false;
+        }
         AlcanzarPosicion(guia, VELHOR);
+
     }
     private void Esquivar()
     {
         if (!ObstaculoLateralDetectado())
         {
             estado = Estado.SEGUIRGUIA;
+            t = Time.time;
             return;
         }
         AlcanzarAltura(alturaDeseada, VELVERT);
