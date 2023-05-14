@@ -20,8 +20,8 @@ public class HelicopteroScript : MonoBehaviour
     public GameObject guia;
     public GameObject engancheCadena;
 
-    private bool edificioObstaculo;
-    private float tiempoSubida;
+    private float distanciaObstaculo;
+    private float t;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -30,15 +30,14 @@ public class HelicopteroScript : MonoBehaviour
         masa = rb.mass + 5 * 9 + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
-        //engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
-        edificioObstaculo = false;
-        tiempoSubida = 0f;
+        engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
+        alturaDeseada = ALTURABASE;
+        distanciaObstaculo = 0;
+        t = 1;
     }
     private void FixedUpdate()
     {
-        alturaDeseada = ALTURABASE;
         AlcanzarAltura(alturaDeseada, VELVERT);
-        Sensores();
         print("Estado helicoptero: " + estado);
         switch (estado)
         {
@@ -94,54 +93,67 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void SeguirGuia()
     {
-        if (ObstaculoDetectado())
+        if (ObstaculoLateralDetectado())
         {
+            print("EDIFICIO DETECTADO.");
             estado = Estado.ESQUIVAR;
-            edificioObstaculo = true;
-            StartCoroutine("AumentarAltura");
+            float velocidad = rb.velocity.magnitude;
+            StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad));
             return;
         }
         AlcanzarPosicion(guia, VELHOR);
     }
     private void Esquivar()
     {
-        // print(tiempoSubida);
-        AlcanzarAltura(alturaDeseada, VELVERT);
-        if (edificioObstaculo && !ObstaculoDetectado())
-        {
-            tiempoSubida = 0f;
-            edificioObstaculo = false;
-        }
-        else if (!ObstaculoDetectado())
-        {
-            tiempoSubida += Time.deltaTime;
-        }
-        if (tiempoSubida >= 5)
+        if (!ObstaculoLateralDetectado())
         {
             estado = Estado.SEGUIRGUIA;
-            StopCoroutine("AumentarAltura");
+            return;
         }
+        AlcanzarAltura(alturaDeseada, VELVERT);
     }
-    IEnumerator AumentarAltura()
+    IEnumerator AumentarAltura(float distancia, float velocidad)
     {
-        while (true)
+        while (ObstaculoLateralDetectado())
         {
-            alturaDeseada += 0.3f;
-            yield return new WaitForSeconds(0.5f);
+            print("SUBIENDO...");
+            alturaDeseada += 1f;
+            print(alturaDeseada);
+            yield return new WaitForSeconds((distancia/velocidad) * 0.1f);
         }
     }
-    private bool ObstaculoDetectado()
+    private bool ObstaculoLateralDetectado()
     {
         bool obstaculo = false;
-        // print("pepe");
-        for (int i = 1; i < detectSens.Length; i++)
+        int pos = 1;
+        if (Sensores())
         {
-            RaycastHit hit = detectSens[i];
-            if (hit.distance <= 5 && (hit.collider != null && (hit.collider.CompareTag("edificio") || hit.collider.CompareTag("montana"))))
+            while (!obstaculo && pos < detectSens.Length)
             {
-                print(hit.collider.tag);
+                if (detectSens[pos].collider != null 
+                    && detectSens[pos].collider.gameObject.CompareTag("edificio")
+                    && detectSens[pos].distance < rb.velocity.magnitude)
+                {
+                    Vector3 vDirEdificio = detectSens[pos].point - transform.position;
+                    if(Vector3.Angle(vDirEdificio, rb.velocity) < 90)
+                    {
+                        distanciaObstaculo = detectSens[pos].distance;
+                        obstaculo = true;
+                    }
+                }
+                pos ++;
+            }
+        }
+        return obstaculo;
+    }
+    private bool ObstaculoAbajo()
+    {
+        bool obstaculo = false;
+        if(Sensores())
+        {
+            if (detectSens[0].collider.gameObject.CompareTag("edificio"))
+            {
                 obstaculo = true;
-                break;
             }
         }
         return obstaculo;

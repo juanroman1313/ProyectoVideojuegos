@@ -77,7 +77,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     
     private void Esquivar()
     {
-        print(tiempoSubida);
+        // print(tiempoSubida);
         AlcanzarAltura(alturaDeseada, VELVERT);
         if (edificioObstaculo && !ObstaculoDetectado())
         {
