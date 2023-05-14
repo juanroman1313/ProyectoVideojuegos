@@ -11,7 +11,7 @@ public class HelicopteroScript : MonoBehaviour
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
     private const float VELGIR = 1000f;
-    private const float ALTURABASE = 8;
+    private const float ALTURABASE = 10;
     private float alturaDeseada;
     private Rigidbody rb;
     private float masa;
@@ -23,6 +23,8 @@ public class HelicopteroScript : MonoBehaviour
     private float distanciaObstaculo;
     private float t;
     private bool alturaObt;
+    private bool distMontObtenida;
+    private float distMont;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -35,6 +37,9 @@ public class HelicopteroScript : MonoBehaviour
         alturaDeseada = ALTURABASE;
         distanciaObstaculo = 0;
         t = 1;
+        alturaObt = false;
+        distMontObtenida = false;
+        distMont = 0;
     }
     private void FixedUpdate()
     {
@@ -102,11 +107,11 @@ public class HelicopteroScript : MonoBehaviour
             StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad));
             return;
         }
-        if(alturaDeseada != ALTURABASE && Time.time > t + 3 && !ObstaculoAbajo())
+        if(alturaDeseada != ALTURABASE && Time.time > t + 3 && !EdificioAbajo() && !MontanaAbajo())
         {
             alturaDeseada = ALTURABASE;
         }
-        if (ObstaculoAbajo())
+        if (EdificioAbajo())
         {
             print("edificio abajo.");
             if (!alturaObt)
@@ -119,6 +124,19 @@ public class HelicopteroScript : MonoBehaviour
         else
         {
             alturaObt = false;
+        }
+        if (MontanaAbajo())
+        {
+            if (!distMontObtenida)
+            {
+                distMont = detectSens[0].distance;
+                distMontObtenida = true;
+            }
+            alturaDeseada = detectSens[0].point.y + distMont;
+        }
+        else
+        {
+            distMontObtenida = false;
         }
         AlcanzarPosicion(guia, VELHOR);
 
@@ -167,12 +185,24 @@ public class HelicopteroScript : MonoBehaviour
         }
         return obstaculo;
     }
-    private bool ObstaculoAbajo()
+    private bool EdificioAbajo()
     {
         bool obstaculo = false;
         if(Sensores())
         {
             if (detectSens[0].collider.gameObject.CompareTag("edificio"))
+            {
+                obstaculo = true;
+            }
+        }
+        return obstaculo;
+    }
+    private bool MontanaAbajo()
+    {
+        bool obstaculo = false;
+        if (Sensores())
+        {
+            if (detectSens[0].collider.gameObject.CompareTag("montana"))
             {
                 obstaculo = true;
             }
