@@ -45,15 +45,15 @@ public class HelicopteroScript : MonoBehaviour
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
         print("Estado helicoptero: " + estado);
-        switch (estado)
+        switch (estado)                         // ESTADOS SIGUIENTES:
         {
-            case Estado.DESPEGAR:
+            case Estado.DESPEGAR:               // SEGUIRGUIA
                 Despegar();
                 break;
-            case Estado.SEGUIRGUIA:
+            case Estado.SEGUIRGUIA:             // ESQUIVAR
                 SeguirGuia();
                 break;
-            case Estado.ESQUIVAR:
+            case Estado.ESQUIVAR:               // SEGUIRGUIA
                 Esquivar();
                 break;
         }
@@ -99,18 +99,21 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void SeguirGuia()
     {
+        // Si detectamos algún obstáculo lateral, entramos en el if y cambiamos de estado.
         if (ObstaculoLateralDetectado())
         {
             print("EDIFICIO DETECTADO.");
             estado = Estado.ESQUIVAR;
             float velocidad = rb.velocity.magnitude;
-            StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad));
+            StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad)); 
             return;
         }
+        // Si pasa algún tiempo sin obstáculos abajo, bajamos a la altura base.
         if(alturaDeseada != ALTURABASE && Time.time > t + 3 && !EdificioAbajo() && !MontanaAbajo())
         {
             alturaDeseada = ALTURABASE;
         }
+        // Si hay un edificio abajo, nos quedamos a la misma altura.
         if (EdificioAbajo())
         {
             print("edificio abajo.");
@@ -125,6 +128,7 @@ public class HelicopteroScript : MonoBehaviour
         {
             alturaObt = false;
         }
+        // Si hay una montaña abajo, obtenemos la primera distancia a la montaña y la mantenemos en todo momento.
         if (MontanaAbajo())
         {
             if (!distMontObtenida)
@@ -143,6 +147,7 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void Esquivar()
     {
+        // Si dejamos de detectar el obstáculo lateral, significa que estamos a más altura. Por lo tanto, cambiamos a SEGUIRGUIA.
         if (!ObstaculoLateralDetectado())
         {
             estado = Estado.SEGUIRGUIA;
@@ -151,6 +156,7 @@ public class HelicopteroScript : MonoBehaviour
         }
         AlcanzarAltura(alturaDeseada, VELVERT);
     }
+    // Corutina para aumentar altura al detectar obstáculo lateral.
     IEnumerator AumentarAltura(float distancia, float velocidad)
     {
         while (ObstaculoLateralDetectado())
@@ -158,9 +164,12 @@ public class HelicopteroScript : MonoBehaviour
             print("SUBIENDO...");
             alturaDeseada += 1f;
             print(alturaDeseada);
-            yield return new WaitForSeconds((distancia/velocidad) * 0.1f);
+            yield return new WaitForSeconds((distancia/velocidad) * 0.1f); // He intentado dependiendo de la velocidad contra
+                                                                           // el edificio y distancia, subir la altura con más
+                                                                           // o menos velocidad.
         }
     }
+    // Función para detectar obstáculos laterales.
     private bool ObstaculoLateralDetectado()
     {
         bool obstaculo = false;
@@ -170,14 +179,17 @@ public class HelicopteroScript : MonoBehaviour
             while (!obstaculo && pos < detectSens.Length)
             {
                 if (detectSens[pos].collider != null 
-                    && detectSens[pos].collider.gameObject.CompareTag("edificio")
-                    && detectSens[pos].distance < rb.velocity.magnitude)
+                    && detectSens[pos].collider.gameObject.CompareTag("edificio") // Si el obstáculo es un edificio.
+                    && detectSens[pos].distance < rb.velocity.magnitude) // Si la distancia es menor que la velocidad a la que vamos.
                 {
+                    // Obtenemos el vector dirección de el helicoptero con el punto de choque del sensor.
                     Vector3 vDirEdificio = detectSens[pos].point - transform.position;
+                    // Suponemos que si el ángulo entre el vector anterior y el vector velocidad es menor de 90 grados, estamos yendo
+                    // en dirección al edificio.
                     if(Vector3.Angle(vDirEdificio, rb.velocity) < 90)
                     {
                         distanciaObstaculo = detectSens[pos].distance;
-                        obstaculo = true;
+                        obstaculo = true; // Por lo tanto, es un obstáculo.
                     }
                 }
                 pos ++;
@@ -185,6 +197,7 @@ public class HelicopteroScript : MonoBehaviour
         }
         return obstaculo;
     }
+    // Función para detectar si hay un edificio abajo.
     private bool EdificioAbajo()
     {
         bool obstaculo = false;
@@ -197,6 +210,7 @@ public class HelicopteroScript : MonoBehaviour
         }
         return obstaculo;
     }
+    // Función para detectar si hay una montaña abajo.
     private bool MontanaAbajo()
     {
         bool obstaculo = false;
