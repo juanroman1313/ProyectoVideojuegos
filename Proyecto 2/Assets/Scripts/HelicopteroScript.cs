@@ -94,7 +94,7 @@ public class HelicopteroScript : MonoBehaviour
             masa += 1;
             cajaTomada = true;
         }
-        if(cajaTomada && alturaDeseada == ALTURABASE)
+        if(cajaTomada && alturaDeseada >= ALTURABASE)
         {
             guia.GetComponent<GuiaScript>().SiguienteDestino();
             estado = Estado.SEGUIRGUIA;
@@ -106,7 +106,6 @@ public class HelicopteroScript : MonoBehaviour
         AlcanzarPosicion(guia, VELHOR);
         if (choqueCaja && !cajaSoltada)
         {
-            alturaObjetivoSubida = alturaDeseada + 10;
             StartCoroutine(Subir(alturaObjetivoSubida));
             masa -= 1;
             cajaSoltada = true;
@@ -117,6 +116,7 @@ public class HelicopteroScript : MonoBehaviour
             {
                 Destroy(g);
             }
+            masa -= (5 * 9 + 10);
             enganche = false;
             guia.GetComponent<GuiaScript>().SiguienteDestino();
             estado = Estado.SEGUIRGUIA;
@@ -200,6 +200,7 @@ public class HelicopteroScript : MonoBehaviour
             && Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
             && guia.GetComponent<GuiaScript>().accionCaja)
         {
+            alturaObjetivoSubida = alturaDeseada;
             StartCoroutine("Bajar");
             estado = Estado.DEJARCAJA;
             return;
