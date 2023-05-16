@@ -28,7 +28,6 @@ public class HelicopteroScript : MonoBehaviour
     void Start()
     {
         estado = Estado.DESPEGAR;
-        alturaDeseada = 0;
         rb = GetComponent<Rigidbody>();
         masa = rb.mass + 5 * 9 + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
