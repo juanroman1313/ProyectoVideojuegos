@@ -99,27 +99,4 @@ public class CocheScript : MonoBehaviour
             return;
         }
     }
-    /*
-    private void AlcanzarPosicion(GameObject objeto,float velocidadHorizontal)
-    {
-        vectorHaciaObjeto = objeto.transform.position - transform.position;
-        anguloObjeto = Vector3.SignedAngle(transform.forward, vectorHaciaObjeto, Vector3.up);
-        distancia = Vector3.Distance(transform.position, objeto.transform.position);
-        print("Angulo: " + anguloObjeto);
-        print("Distancia Coche: " + distancia);
-        if(anguloObjeto>=-10 && anguloObjeto <= 10)
-        {
-            modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * velocidadHorizontal);
-            modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * velocidadHorizontal);
-        }else if (anguloObjeto > 3)
-        {
-            modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * velocidadHorizontal*anguloObjeto);
-            modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * velocidadHorizontal*anguloObjeto *-1);
-        }else if (anguloObjeto < -3)
-        {
-            modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * velocidadHorizontal * anguloObjeto);
-            modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * velocidadHorizontal * anguloObjeto *-1);
-        }
-    }
-    */
 }
