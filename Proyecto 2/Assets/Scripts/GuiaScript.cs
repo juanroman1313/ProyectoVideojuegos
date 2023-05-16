@@ -26,7 +26,8 @@ public class GuiaScript : MonoBehaviour
                 BajoHelicoptero();
                 break;
             case Estado.IRMETA:
-                agente.destination = meta.transform.position;
+                agente.speed = meta.GetComponent<Rigidbody>().velocity.magnitude;
+                agente.destination = new Vector3(meta.transform.position.x, 0, meta.transform.position.z);
                 break;
         }
     }
@@ -37,7 +38,6 @@ public class GuiaScript : MonoBehaviour
     public void CambiarAIrMeta()
     {
         agente.enabled = true;
-        agente.destination = meta.transform.position;
         estado = Estado.IRMETA;
     }
 }

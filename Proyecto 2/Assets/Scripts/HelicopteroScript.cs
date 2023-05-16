@@ -254,7 +254,7 @@ public class HelicopteroScript : MonoBehaviour
         {
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(vectorDireccionObjetivo * factor);
-            noGirar(VELGIR); // frenamos el giro.
+            NoGirar(VELGIR); // frenamos el giro.
             print("Mantener posición.");
         }
         else if(Vector3.Distance(transform.position, posObj) < rb.velocity.magnitude
@@ -303,7 +303,7 @@ public class HelicopteroScript : MonoBehaviour
         }
         rb.AddRelativeTorque(ejeGiro * velocidadGiro);
     }
-    private void noGirar(float velocidadGiro)
+    private void NoGirar(float velocidadGiro)
     {
         Vector3 ejeGiro = Vector3.up; // Eje en el que vamos a girar.
         if (rb.angularVelocity.y > 0) // si estamos girando hacia la derecha, hacemos fuerza hacia la izquierda.
