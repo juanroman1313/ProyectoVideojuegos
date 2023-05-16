@@ -57,7 +57,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         if (transform.position.y >= alturaDeseada - 1)
         {
             estado = Estado.SEGUIRGUIA;
-            guia.GetComponent<GuiaScript>().CambiarAIrMeta();
+            guia.GetComponent<GuiaScript>().CambiarAIrDestinos();
             StartCoroutine("RutinaEntrenamiento");
         }
     }

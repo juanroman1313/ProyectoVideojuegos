@@ -1,3 +1,4 @@
+using java.security;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -6,7 +7,7 @@ using UnityEngine.AI;
 
 public class HelicopteroScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR, SEGUIRGUIA, ESQUIVAR}
+    private enum Estado {DESPEGAR, TOMARCAJA, SEGUIRGUIA, DEJARCAJA, ESQUIVAR}
     private Estado estado;
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
@@ -25,6 +26,13 @@ public class HelicopteroScript : MonoBehaviour
     private bool alturaObt;
     private bool distMontObtenida;
     private float distMont;
+
+    private bool enganche;
+    private bool cajaTomada;
+    private bool cajaSoltada;
+    public bool choqueCaja;
+    private float alturaObjetivoSubida;
+    public GameObject[] enganches;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -32,13 +40,17 @@ public class HelicopteroScript : MonoBehaviour
         masa = rb.mass + 5 * 9 + 10; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
-        engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
+        //engancheCadena.GetComponent<FixedJoint>().connectedBody = null;
         alturaDeseada = ALTURABASE;
         distanciaObstaculo = 0;
         t = 1;
         alturaObt = false;
         distMontObtenida = false;
         distMont = 0;
+        enganche = true;
+        cajaTomada = false;
+        choqueCaja = false;
+        cajaSoltada = false;
     }
     private void FixedUpdate()
     {
@@ -49,8 +61,14 @@ public class HelicopteroScript : MonoBehaviour
             case Estado.DESPEGAR:               // SEGUIRGUIA
                 Despegar();
                 break;
+            case Estado.TOMARCAJA:
+                TomarCaja();
+                break;
             case Estado.SEGUIRGUIA:             // ESQUIVAR
                 SeguirGuia();
+                break;
+            case Estado.DEJARCAJA:
+                DejarCaja();
                 break;
             case Estado.ESQUIVAR:               // SEGUIRGUIA
                 Esquivar();
@@ -62,10 +80,49 @@ public class HelicopteroScript : MonoBehaviour
         if(transform.position.y >= alturaDeseada - 1)
         {
             estado = Estado.SEGUIRGUIA;
-            guia.GetComponent<GuiaScript>().CambiarAIrMeta();
+            guia.GetComponent<GuiaScript>().CambiarAIrDestinos();
         }
     }
-    // Método para hacer que el helicóptero alzance una altura determinada, manejando la variable alturaDeseada.
+    // Método para tomar caja. Si el imán choca con la caja, empezamos la subida. Si alcanzamos la altura base, seguimos a la guia.
+    private void TomarCaja()
+    {
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        AlcanzarPosicion(guia, VELHOR);
+        if (choqueCaja && !cajaTomada)
+        {
+            StartCoroutine(Subir(ALTURABASE));
+            masa += 1;
+            cajaTomada = true;
+        }
+        if(cajaTomada && alturaDeseada == ALTURABASE)
+        {
+            guia.GetComponent<GuiaScript>().SiguienteDestino();
+            estado = Estado.SEGUIRGUIA;
+        }
+    }
+    private void DejarCaja()
+    {
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        AlcanzarPosicion(guia, VELHOR);
+        if (choqueCaja && !cajaSoltada)
+        {
+            alturaObjetivoSubida = alturaDeseada + 10;
+            StartCoroutine(Subir(alturaObjetivoSubida));
+            masa -= 1;
+            cajaSoltada = true;
+        }
+        if (cajaSoltada && alturaDeseada >= alturaObjetivoSubida)
+        {
+            foreach (GameObject g in enganches) // Destruimos el enganche para que no se bugee;
+            {
+                Destroy(g);
+            }
+            enganche = false;
+            guia.GetComponent<GuiaScript>().SiguienteDestino();
+            estado = Estado.SEGUIRGUIA;
+        }
+    }
+    // Método para hacer que el helicóptero alcance una altura determinada, manejando la variable alturaDeseada.
     private void AlcanzarAltura(float altura, float velocidadVertical)
     {
         float distanciaAObjetivo = (altura - transform.position.y);
@@ -84,8 +141,17 @@ public class HelicopteroScript : MonoBehaviour
     // Sensores para detectar objetos del entorno.
     private bool Sensores()
     {
-        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -Vector3.up, out detectSens[0]);
-        Debug.DrawRay(transform.position - transform.up * 0.5f, -Vector3.up * 10, Color.red);
+        bool d1;
+        if (enganche)
+        {
+            d1 = Physics.Raycast(transform.position - transform.up * 5f, -Vector3.up, out detectSens[0]);
+            Debug.DrawRay(transform.position - transform.up * 3f, -Vector3.up * 10, Color.red);
+        }
+        else
+        {
+            d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -Vector3.up, out detectSens[0]);
+            Debug.DrawRay(transform.position - transform.up * 0.5f, -Vector3.up * 10, Color.red);
+        }
         bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z), out detectSens[1]);
         Debug.DrawRay(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z) * 10, Color.red);
         bool d3 = Physics.Raycast(transform.position + transform.right * 2f, new Vector3(transform.right.x, 0, transform.right.z), out detectSens[2]);
@@ -96,12 +162,52 @@ public class HelicopteroScript : MonoBehaviour
         Debug.DrawRay(transform.position - transform.right * 2f, -new Vector3(transform.right.x, 0, transform.right.z) * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
     }
+    // Corutina para bajar hasta tomar la caja.
+    private IEnumerator Bajar()
+    {
+        print(choqueCaja);
+        while (!choqueCaja)
+        {
+            print("Bajando...");
+            alturaDeseada -= 0.1f;
+            yield return new WaitForSeconds(0.3f);
+        }
+        choqueCaja = false;
+    }
+    // Corutina para subir lentamente.
+    private IEnumerator Subir(float alturaObjetivo)
+    {
+        while (alturaDeseada < alturaObjetivo)
+        {
+            print("Subiendo...");
+            alturaDeseada += 0.1f;
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
     private void SeguirGuia()
     {
+        // Condición para empezar a bajar y tomar la caja.
+        print("Distancia a guia: " + Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position));
+        if (!cajaTomada
+            && Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
+            && guia.GetComponent<GuiaScript>().accionCaja)
+        {
+            StartCoroutine("Bajar");
+            estado = Estado.TOMARCAJA;
+            return;
+        }
+        if(cajaTomada && !cajaSoltada
+            && Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
+            && guia.GetComponent<GuiaScript>().accionCaja)
+        {
+            StartCoroutine("Bajar");
+            estado = Estado.DEJARCAJA;
+            return;
+        }
         // Si detectamos algún obstáculo lateral, entramos en el if y cambiamos de estado.
         if (ObstaculoLateralDetectado())
         {
-            print("EDIFICIO DETECTADO.");
+            //print("EDIFICIO DETECTADO.");
             estado = Estado.ESQUIVAR;
             float velocidad = rb.velocity.magnitude;
             StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad)); 
@@ -115,7 +221,7 @@ public class HelicopteroScript : MonoBehaviour
         // Si hay un edificio abajo, nos quedamos a la misma altura.
         if (EdificioAbajo())
         {
-            print("edificio abajo.");
+            //print("edificio abajo.");
             if (!alturaObt)
             {
                 alturaDeseada = transform.position.y;
@@ -132,7 +238,14 @@ public class HelicopteroScript : MonoBehaviour
         {
             if (!distMontObtenida)
             {
-                distMont = detectSens[0].distance;
+                if (enganche)
+                {
+                    distMont = detectSens[0].distance + 10f;
+                }
+                else
+                {
+                    distMont = detectSens[0].distance;
+                }
                 distMontObtenida = true;
             }
             alturaDeseada = detectSens[0].point.y + distMont;
@@ -160,9 +273,8 @@ public class HelicopteroScript : MonoBehaviour
     {
         while (ObstaculoLateralDetectado())
         {
-            print("SUBIENDO...");
+            //print("SUBIENDO...");
             alturaDeseada += 1f;
-            print(alturaDeseada);
             yield return new WaitForSeconds((distancia/velocidad) * 0.1f); // He intentado dependiendo de la velocidad contra
                                                                            // el edificio y distancia, subir la altura con más
                                                                            // o menos velocidad.
@@ -240,12 +352,12 @@ public class HelicopteroScript : MonoBehaviour
                 //transform.LookAt(posObj);
                 giroFisico(vectorDireccionObjetivo, VELGIR);
                 rb.AddForce(transform.forward * masa * 10);
-                print("Me paso con distancia mayor a 3.");
+                //print("Me paso con distancia mayor a 3.");
             }
             else    // Si la distancia es menor a 3, no hace falta girar. Corregimos para llegar al objetivo.
             {
                 rb.AddForce(vectorDireccionObjetivo * masa * 10);
-                print("Me paso con distancia menor a 3.");
+                //print("Me paso con distancia menor a 3.");
             }
             rb.AddForce(-rb.velocity * 5 * masa); // Debemos frenar para corregir.
         }
@@ -255,7 +367,7 @@ public class HelicopteroScript : MonoBehaviour
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(vectorDireccionObjetivo * factor);
             NoGirar(VELGIR); // frenamos el giro.
-            print("Mantener posición.");
+            //print("Mantener posición.");
         }
         else if(Vector3.Distance(transform.position, posObj) < rb.velocity.magnitude
                 || (velocidadGuia > 0 && rb.velocity.magnitude > velocidadGuia)) // Frenamos en caso de que vayamos más rapido
@@ -266,7 +378,7 @@ public class HelicopteroScript : MonoBehaviour
         {
             //rb.AddForce(-transform.forward * masa);
             rb.AddForce(-rb.velocity * masa);
-            print("Frenar.");
+            //print("Frenar.");
         }
         else            // En cualquier otro caso aceleramos hacia el objeto guia.
         {
@@ -274,7 +386,7 @@ public class HelicopteroScript : MonoBehaviour
             giroFisico(vectorDireccionObjetivo, VELGIR);
             float factor = vectorDireccionObjetivo.magnitude * velocidadHorizontal;
             rb.AddForce(transform.forward * factor);
-            print("Acelerar.");
+            //print("Acelerar.");
         }
     }
     private void giroFisico(Vector3 vectorDir, float velocidadGiro)
