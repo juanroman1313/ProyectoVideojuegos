@@ -8,7 +8,6 @@ public class CocheScript : MonoBehaviour
     public Transform modeloRuedaIzquierda, modeloRuedaFrontalDerecha;
     float fuerzaFrontal;
     public GameObject guia;
-    public float intencionAvazar = 1, intencionGirar = 0; //0 es sin intención, 1 máx velocidad
     Rigidbody rb;
     float anguloObjeto;
     float distancia;
