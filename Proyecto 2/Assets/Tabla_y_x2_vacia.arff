@@ -1,0 +1,4 @@
+@relation FuncionCuadratica
+@attribute  X  numeric
+@attribute  Y  numeric
+@data 
