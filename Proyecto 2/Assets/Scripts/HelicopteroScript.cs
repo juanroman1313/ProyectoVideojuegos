@@ -22,6 +22,9 @@ public class HelicopteroScript : MonoBehaviour
 
     private float distanciaObstaculo;
     private float t;
+    private bool alturaObt;
+    private bool distMontObtenida;
+    private float distMont;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -34,20 +37,23 @@ public class HelicopteroScript : MonoBehaviour
         alturaDeseada = ALTURABASE;
         distanciaObstaculo = 0;
         t = 1;
+        alturaObt = false;
+        distMontObtenida = false;
+        distMont = 0;
     }
     private void FixedUpdate()
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
         print("Estado helicoptero: " + estado);
-        switch (estado)
+        switch (estado)                         // ESTADOS SIGUIENTES:
         {
-            case Estado.DESPEGAR:
+            case Estado.DESPEGAR:               // SEGUIRGUIA
                 Despegar();
                 break;
-            case Estado.SEGUIRGUIA:
+            case Estado.SEGUIRGUIA:             // ESQUIVAR
                 SeguirGuia();
                 break;
-            case Estado.ESQUIVAR:
+            case Estado.ESQUIVAR:               // SEGUIRGUIA
                 Esquivar();
                 break;
         }
@@ -79,39 +85,78 @@ public class HelicopteroScript : MonoBehaviour
     // Sensores para detectar objetos del entorno.
     private bool Sensores()
     {
-        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -transform.up, out detectSens[0]);
-        Debug.DrawRay(transform.position - transform.up * 0.5f, -transform.up * 10, Color.red);
-        bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, transform.forward, out detectSens[1]);
-        Debug.DrawRay(transform.position + transform.forward * 2.5f, transform.forward * 10, Color.red);
-        bool d3 = Physics.Raycast(transform.position + transform.right * 2f, transform.right, out detectSens[2]);
-        Debug.DrawRay(transform.position + transform.right * 2f, transform.right * 10, Color.red);
-        bool d4 = Physics.Raycast(transform.position - transform.forward * 4.5f, -transform.forward, out detectSens[3]);
-        Debug.DrawRay(transform.position - transform.forward * 4.5f, -transform.forward * 10, Color.red);
-        bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -transform.right, out detectSens[4]);
-        Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
+        bool d1 = Physics.Raycast(transform.position - transform.up * 0.5f, -Vector3.up, out detectSens[0]);
+        Debug.DrawRay(transform.position - transform.up * 0.5f, -Vector3.up * 10, Color.red);
+        bool d2 = Physics.Raycast(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z), out detectSens[1]);
+        Debug.DrawRay(transform.position + transform.forward * 2.5f, new Vector3(transform.forward.x, 0, transform.forward.z) * 10, Color.red);
+        bool d3 = Physics.Raycast(transform.position + transform.right * 2f, new Vector3(transform.right.x, 0, transform.right.z), out detectSens[2]);
+        Debug.DrawRay(transform.position + transform.right * 2f, new Vector3(transform.right.x, 0, transform.right.z) * 10, Color.red);
+        bool d4 = Physics.Raycast(transform.position - transform.forward * 4.5f, -new Vector3(transform.forward.x, 0, transform.forward.z), out detectSens[3]);
+        Debug.DrawRay(transform.position - transform.forward * 4.5f, -new Vector3(transform.forward.x, 0, transform.forward.z) * 10, Color.red);
+        bool d5 = Physics.Raycast(transform.position - transform.right * 2f, -new Vector3(transform.right.x, 0, transform.right.z), out detectSens[4]);
+        Debug.DrawRay(transform.position - transform.right * 2f, -new Vector3(transform.right.x, 0, transform.right.z) * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
     }
     private void SeguirGuia()
     {
+        // Si detectamos algún obstáculo lateral, entramos en el if y cambiamos de estado.
         if (ObstaculoLateralDetectado())
         {
             print("EDIFICIO DETECTADO.");
             estado = Estado.ESQUIVAR;
             float velocidad = rb.velocity.magnitude;
-            StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad));
+            StartCoroutine(AumentarAltura(distanciaObstaculo, velocidad)); 
             return;
         }
+        // Si pasa algún tiempo sin obstáculos abajo, bajamos a la altura base.
+        if(alturaDeseada != ALTURABASE && Time.time > t + 3 && !EdificioAbajo() && !MontanaAbajo())
+        {
+            alturaDeseada = ALTURABASE;
+        }
+        // Si hay un edificio abajo, nos quedamos a la misma altura.
+        if (EdificioAbajo())
+        {
+            print("edificio abajo.");
+            if (!alturaObt)
+            {
+                alturaDeseada = transform.position.y;
+                alturaObt = true;
+            }
+            t = Time.time;
+        }
+        else
+        {
+            alturaObt = false;
+        }
+        // Si hay una montaña abajo, obtenemos la primera distancia a la montaña y la mantenemos en todo momento.
+        if (MontanaAbajo())
+        {
+            if (!distMontObtenida)
+            {
+                distMont = detectSens[0].distance;
+                distMontObtenida = true;
+            }
+            alturaDeseada = detectSens[0].point.y + distMont;
+        }
+        else
+        {
+            distMontObtenida = false;
+        }
         AlcanzarPosicion(guia, VELHOR);
+
     }
     private void Esquivar()
     {
+        // Si dejamos de detectar el obstáculo lateral, significa que estamos a más altura. Por lo tanto, cambiamos a SEGUIRGUIA.
         if (!ObstaculoLateralDetectado())
         {
             estado = Estado.SEGUIRGUIA;
+            t = Time.time;
             return;
         }
         AlcanzarAltura(alturaDeseada, VELVERT);
     }
+    // Corutina para aumentar altura al detectar obstáculo lateral.
     IEnumerator AumentarAltura(float distancia, float velocidad)
     {
         while (ObstaculoLateralDetectado())
@@ -119,9 +164,12 @@ public class HelicopteroScript : MonoBehaviour
             print("SUBIENDO...");
             alturaDeseada += 1f;
             print(alturaDeseada);
-            yield return new WaitForSeconds((distancia/velocidad) * 0.1f);
+            yield return new WaitForSeconds((distancia/velocidad) * 0.1f); // He intentado dependiendo de la velocidad contra
+                                                                           // el edificio y distancia, subir la altura con más
+                                                                           // o menos velocidad.
         }
     }
+    // Función para detectar obstáculos laterales.
     private bool ObstaculoLateralDetectado()
     {
         bool obstaculo = false;
@@ -131,14 +179,17 @@ public class HelicopteroScript : MonoBehaviour
             while (!obstaculo && pos < detectSens.Length)
             {
                 if (detectSens[pos].collider != null 
-                    && detectSens[pos].collider.gameObject.CompareTag("edificio")
-                    && detectSens[pos].distance < rb.velocity.magnitude)
+                    && detectSens[pos].collider.gameObject.CompareTag("edificio") // Si el obstáculo es un edificio.
+                    && detectSens[pos].distance < rb.velocity.magnitude) // Si la distancia es menor que la velocidad a la que vamos.
                 {
+                    // Obtenemos el vector dirección de el helicoptero con el punto de choque del sensor.
                     Vector3 vDirEdificio = detectSens[pos].point - transform.position;
+                    // Suponemos que si el ángulo entre el vector anterior y el vector velocidad es menor de 90 grados, estamos yendo
+                    // en dirección al edificio.
                     if(Vector3.Angle(vDirEdificio, rb.velocity) < 90)
                     {
                         distanciaObstaculo = detectSens[pos].distance;
-                        obstaculo = true;
+                        obstaculo = true; // Por lo tanto, es un obstáculo.
                     }
                 }
                 pos ++;
@@ -146,12 +197,26 @@ public class HelicopteroScript : MonoBehaviour
         }
         return obstaculo;
     }
-    private bool ObstaculoAbajo()
+    // Función para detectar si hay un edificio abajo.
+    private bool EdificioAbajo()
     {
         bool obstaculo = false;
         if(Sensores())
         {
             if (detectSens[0].collider.gameObject.CompareTag("edificio"))
+            {
+                obstaculo = true;
+            }
+        }
+        return obstaculo;
+    }
+    // Función para detectar si hay una montaña abajo.
+    private bool MontanaAbajo()
+    {
+        bool obstaculo = false;
+        if (Sensores())
+        {
+            if (detectSens[0].collider.gameObject.CompareTag("montana"))
             {
                 obstaculo = true;
             }
