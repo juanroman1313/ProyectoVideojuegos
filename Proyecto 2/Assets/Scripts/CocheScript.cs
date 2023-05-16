@@ -50,8 +50,17 @@ public class CocheScript : MonoBehaviour
     {
         print("Angulo: " + anguloObjeto);
         print("Distancia Coche: " + distancia);
-        modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal);
-        modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * fuerzaFrontal);
+        if (distancia > 10)
+        {
+            modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal);
+            modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * fuerzaFrontal);
+        }
+        else
+        {
+            modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal*-1);
+            modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddRelativeTorque(modeloRuedaFrontalDerecha.right * distancia * fuerzaFrontal*-1);
+        }
+       
         if(anguloObjeto > 10)
         {
             estado = Estado.GIRADER;
