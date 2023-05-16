@@ -19,8 +19,7 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     private Vector3 posicionDeseada;
     public GameObject guia;
 
-    private bool edificioObstaculo;
-    private float tiempoSubida;
+    private float distanciaObstaculo;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -30,8 +29,6 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         detectSens = new RaycastHit[5];
         posicionDeseada = transform.position;
-        edificioObstaculo = false;
-        tiempoSubida = 0f;
     }
     private void FixedUpdate()
     {
@@ -60,46 +57,63 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     }
     private void Vagar()
     {
-        AlcanzarAltura(alturaDeseada, VELVERT);
-        AlcanzarPosicion(guia, VELHOR);
-        if (Vector3.Distance(detectSens[0].point, guia.transform.position)<2)
+        if (DestinoAlcanzado())
         {
             guia.GetComponent<GuiaEnemigoScript>().CambiarDestino();
-            alturaDeseada = 10f;
         }
-        if (ObstaculoDetectado())
+        if (ObstaculoLateralDetectado())
         {
             estado = Estado.ESQUIVAR;
-            edificioObstaculo = true;
-            StartCoroutine("AumentarAltura");
+            StartCoroutine(AumentarAltura(distanciaObstaculo,rb.velocity.magnitude));
         }
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        AlcanzarPosicion(guia, VELHOR);
     }
-    
+    private bool DestinoAlcanzado()
+    {
+        print("Distancia: "+Vector3.Distance(transform.position, guia.transform.position));
+        return Vector3.Distance(new Vector3(transform.position.x,0,transform.position.z),new Vector3(guia.transform.position.x,0,guia.transform.position.z)) <= 20;
+    }
     private void Esquivar()
     {
-        // print(tiempoSubida);
-        AlcanzarAltura(alturaDeseada, VELVERT);
-        if (edificioObstaculo && !ObstaculoDetectado())
-        {
-            tiempoSubida = 0f;
-            edificioObstaculo = false;
-        }else if (!ObstaculoDetectado())
-        {
-            tiempoSubida += Time.deltaTime;
-        }
-        if (tiempoSubida >= 5)
+        if (!ObstaculoLateralDetectado())
         {
             estado = Estado.VAGAR;
-            StopCoroutine("AumentarAltura");
+            return;
+        }
+        AlcanzarAltura(alturaDeseada, VELVERT);
+    }
+    IEnumerator AumentarAltura(float distancia,float velocidad)
+    {
+        while (ObstaculoLateralDetectado())
+        {
+            alturaDeseada += 1f;
+            yield return new WaitForSeconds((distancia/velocidad) * 0.1f);
         }
     }
-    IEnumerator AumentarAltura()
+    private bool ObstaculoLateralDetectado()
     {
-        while (true)
+        bool obstaculo = false;
+        int pos = 1;
+        if (Sensores())
         {
-            alturaDeseada += 0.3f;
-            yield return new WaitForSeconds(0.5f);
+            while (!obstaculo && pos < detectSens.Length)
+            {
+                if (detectSens[pos].collider != null
+                    && detectSens[pos].collider.gameObject.CompareTag("edificio")
+                    && detectSens[pos].distance < rb.velocity.magnitude)
+                {
+                    Vector3 vDirEdificio = detectSens[pos].point - transform.position;
+                    if (Vector3.Angle(vDirEdificio, rb.velocity) < 90)
+                    {
+                        distanciaObstaculo = detectSens[pos].distance;
+                        obstaculo = true;
+                    }
+                }
+                pos++;
+            }
         }
+        return obstaculo;
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)
     {
@@ -172,15 +186,18 @@ public class HelicopteroEnemigoScript : MonoBehaviour
     }
     private void giroFisico(Vector3 vectorDir, float velocidadGiro)
     {
+        // Calculamos el producto escalar del vector3.up y el vector dirección hacia el objetivo.
+        // Obtenemos el positivo y el negativo.
         Vector3 perpYObjPos = Vector3.Cross(Vector3.up, vectorDir);
         Vector3 perpYObjNeg = -Vector3.Cross(Vector3.up, vectorDir);
+        // Calculamos para cada vector, el ángulo con el transform.forward del helicoptero.
         float anguloPos = Vector3.Angle(perpYObjPos, transform.forward);
         float anguloNeg = Vector3.Angle(perpYObjNeg, transform.forward);
-        Vector3 ejeGiro = Vector3.up;
+        Vector3 ejeGiro = Vector3.up; // Eje en el que vamos a girar.
         if (anguloPos < anguloNeg)
-        {
+        { // Si el ángulo con el vector positivo es menor, giramos hacia la izquierda, si no, hacia la derecha.
             ejeGiro *= -1;
-            if (rb.angularVelocity.y > 0)
+            if (rb.angularVelocity.y > 0) // Si nos pasamos, corregimos haciendo un frenado más fuerte.
             {
                 rb.AddRelativeTorque(ejeGiro * velocidadGiro * 2);
             }
@@ -222,20 +239,5 @@ public class HelicopteroEnemigoScript : MonoBehaviour
         Debug.DrawRay(transform.position - transform.right * 2f, -transform.right * 10, Color.red);
         return d1 || d2 || d3 || d4 || d5;
     }
-    private bool ObstaculoDetectado()
-    {
-        bool obstaculo = false;
-        print("pepe");
-        for(int i=1;i<detectSens.Length;i++)
-        {
-            RaycastHit hit = detectSens[i];
-            if (hit.distance <= 5 && (hit.collider!=null&&(hit.collider.CompareTag("edificio")|| hit.collider.CompareTag("montana"))))
-            {
-                print(hit.collider.tag);
-                obstaculo = true;
-                break;
-            }
-        }
-        return obstaculo;
-    }
+
 }
