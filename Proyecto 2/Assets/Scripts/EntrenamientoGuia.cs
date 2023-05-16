@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class GuiaScript : MonoBehaviour
+public class EntrenamientoGuia : MonoBehaviour
 {
     public GameObject helicoptero;
     private NavMeshAgent agente;
     public GameObject meta;
-    public enum Estado {BAJOHELICOPTERO, IRMETA}
+    public enum Estado { BAJOHELICOPTERO, IRMETA }
     public Estado estado;
     void Start()
     {
@@ -26,6 +26,7 @@ public class GuiaScript : MonoBehaviour
                 BajoHelicoptero();
                 break;
             case Estado.IRMETA:
+                agente.speed = meta.GetComponent<Rigidbody>().velocity.magnitude;
                 agente.destination = new Vector3(meta.transform.position.x, 0, meta.transform.position.z);
                 break;
         }

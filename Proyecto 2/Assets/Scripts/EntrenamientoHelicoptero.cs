@@ -2,6 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using weka.classifiers.trees;
+using weka.classifiers.evaluation;
+using weka.core;
+using java.io;
+using java.lang;
+using java.util;
+using weka.classifiers.functions;
+using weka.classifiers;
 
 public class EntrenamientoHelicoptero : MonoBehaviour
 {
@@ -16,6 +24,11 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     private float masa;
     private float fuerzaLevitacion;
     public GameObject guia;
+    weka.classifiers.trees.J48 saberPredecirFuerzaZ;
+    weka.core.Instances casosEntrenamiento;
+
+    public GameObject bala;
+    public GameObject canon;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -45,6 +58,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         {
             estado = Estado.SEGUIRGUIA;
             guia.GetComponent<GuiaScript>().CambiarAIrMeta();
+            StartCoroutine("RutinaEntrenamiento");
         }
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)
@@ -161,8 +175,22 @@ public class EntrenamientoHelicoptero : MonoBehaviour
             rb.AddRelativeTorque(ejeGiro * velocidadGiro);
         }
     }
-    private void RutinaEntrenamiento()
+    private void disparar(float vInitBala)
     {
+        GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
+        Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
+        float masaBala = rbBala.mass;
+        float fuerza = masa * vInitBala;
+        rb.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
+    }
+    private IEnumerator RutinaEntrenamiento()
+    {
+        casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Scripts/Experiencias.arff"));
+        yield return null;
 
+    }
+    private IEnumerator PruebaDisparo()
+    {
+        yield return null;
     }
 }
