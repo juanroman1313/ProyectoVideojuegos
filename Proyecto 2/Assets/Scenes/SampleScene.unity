@@ -17599,6 +17599,7 @@ MonoBehaviour:
   - {fileID: 1261245269}
   - {fileID: 915145627}
   - {fileID: 995080011}
+  caja: {fileID: 168753307}
 --- !u!54 &2087454985
 Rigidbody:
   m_ObjectHideFlags: 0

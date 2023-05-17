@@ -33,6 +33,7 @@ public class HelicopteroScript : MonoBehaviour
     public bool choqueCaja;
     private float alturaObjetivoSubida;
     public GameObject[] enganches;
+    public GameObject caja;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -109,6 +110,7 @@ public class HelicopteroScript : MonoBehaviour
             StartCoroutine(Subir(alturaObjetivoSubida));
             masa -= 1;
             cajaSoltada = true;
+            Destroy(caja.GetComponent<FixedJoint>()); // Destruimos el fixed joint de la caja.
         }
         if (cajaSoltada && alturaDeseada >= alturaObjetivoSubida)
         {
