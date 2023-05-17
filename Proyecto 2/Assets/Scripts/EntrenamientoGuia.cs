@@ -10,10 +10,12 @@ public class EntrenamientoGuia : MonoBehaviour
     public GameObject meta;
     public enum Estado { BAJOHELICOPTERO, IRMETA }
     public Estado estado;
+    private float velocidadAgente;
     void Start()
     {
         agente = GetComponent<NavMeshAgent>();
         agente.enabled = false;
+        velocidadAgente = meta.GetComponent<Rigidbody>().velocity.magnitude;
         estado = Estado.BAJOHELICOPTERO;
     }
 
@@ -26,7 +28,11 @@ public class EntrenamientoGuia : MonoBehaviour
                 BajoHelicoptero();
                 break;
             case Estado.IRMETA:
-                agente.speed = meta.GetComponent<Rigidbody>().velocity.magnitude;
+                if (Vector3.Distance(transform.position, meta.transform.position) < 10)
+                {
+                    velocidadAgente = 4;
+                }
+                agente.speed = velocidadAgente;
                 agente.destination = new Vector3(meta.transform.position.x, 0, meta.transform.position.z);
                 break;
         }
@@ -39,5 +45,9 @@ public class EntrenamientoGuia : MonoBehaviour
     {
         agente.enabled = true;
         estado = Estado.IRMETA;
+    }
+    public void CambiarVelocidad(float velocidad)
+    {
+        velocidadAgente = velocidad;
     }
 }

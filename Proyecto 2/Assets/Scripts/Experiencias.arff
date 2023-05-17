@@ -1,4 +1,6 @@
 @relation FuncionCuadratica
-@attribute  controlVar0  numeric
-@attribute  varObjetivo  numeric
+@attribute  distancia	numeric
+@attribute	vCoche	numeric
+@attribute	vBala	numeric
+@attribute	cocheAlcanzado {"si","no"}
 @data 

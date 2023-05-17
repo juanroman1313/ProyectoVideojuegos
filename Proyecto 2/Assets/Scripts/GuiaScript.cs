@@ -60,6 +60,7 @@ public class GuiaScript : MonoBehaviour
     {
         accionCaja = false;
         posDestino++;
+        if (posDestino == 4) posDestino = 0;
         destinoAct = destinos[posDestino];
         agente.destination = destinoAct.transform.position; // Lo pongo aquí porque me entra en el if de arriba.
     }

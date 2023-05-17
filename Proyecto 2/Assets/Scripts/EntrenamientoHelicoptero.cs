@@ -24,13 +24,19 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     private float masa;
     private float fuerzaLevitacion;
     public GameObject guia;
-    weka.classifiers.trees.J48 saberPredecirFuerzaZ;
+    weka.classifiers.trees.J48 saberPredecirVelocidadBala;
     weka.core.Instances casosEntrenamiento;
 
     public GameObject bala;
     public GameObject canon;
 
     private float velocidadInicial;
+    public GameObject coche;
+
+    string ESTADO;
+    public GameObject cochePrefab;
+    public GameObject puntoFinal;
+    private bool prueba;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -39,21 +45,37 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         masa = rb.mass; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
         velocidadInicial = 5f;
+        ESTADO = "Sin conocimiento";
+        prueba = false;
     }
 
     private void FixedUpdate()
     {
+        print("ESTADO CONOCIMIENTO: "+ESTADO);
         AlcanzarAltura(alturaDeseada, VELVERT);
-        print("Estado helicoptero: " + estado);
-        switch (estado)                         // ESTADOS SIGUIENTES:
+        if (ESTADO=="Sin conocimiento")
         {
-            case Estado.DESPEGAR:               // SEGUIRGUIA
-                Despegar();
-                break;
-            case Estado.SEGUIRGUIA:             // ESQUIVAR
-                SeguirGuia();
-                break;
+            print("Estado helicoptero: " + estado);
+            switch (estado)                         // ESTADOS SIGUIENTES:
+            {
+                case Estado.DESPEGAR:               // SEGUIRGUIA
+                    Despegar();
+                    break;
+                case Estado.SEGUIRGUIA:             // ESQUIVAR
+                    SeguirGuia();
+                    break;
+            }
         }
+        else
+        {
+            if (!prueba)
+            {
+                prueba = true;
+                StartCoroutine(Prueba());
+            }
+            SeguirGuia();
+        }
+       
     }
     private void Despegar()
     {
@@ -61,7 +83,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         {
             estado = Estado.SEGUIRGUIA;
             guia.GetComponent<EntrenamientoGuia>().CambiarAIrMeta();
-            StartCoroutine("PruebaDisparo");
+            StartCoroutine("RutinaEntrenamiento");
         }
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)
@@ -80,8 +102,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     }
     private void SeguirGuia()
     {
-        AlcanzarPosicion(guia, VELHOR);
-
+            AlcanzarPosicion(guia, VELHOR);
     }
     private void AlcanzarPosicion(GameObject objeto, float velocidadHorizontal)
     {
@@ -178,7 +199,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
             rb.AddRelativeTorque(ejeGiro * velocidadGiro);
         }
     }
-    private void disparar(float vInitBala)
+    private void Disparar(float vInitBala)
     {
         GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
         Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
@@ -189,16 +210,68 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     private IEnumerator RutinaEntrenamiento()
     {
         casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Scripts/Experiencias.arff"));
-        yield return null;
+        float velocidadBala;
+        for(int i = 0; i < 1; i++)
+        {
+            velocidadBala = UnityEngine.Random.Range(2f, 10f);
+            guia.GetComponent<EntrenamientoGuia>().CambiarVelocidad(velocidadBala);
+            for (float vInit = velocidadInicial; vInit <= 100; vInit += 5)                   //BUCLE de planificación de la fuerza FX durante el entrenamiento
+            {
+                GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
+                Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
+                float masaBala = rbBala.mass;
+                float fuerza = masaBala * vInit;
+                rbBala.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
+                yield return new WaitUntil(() => (rbBala.transform.position.y <= 0.7));        //... y espera a que la pelota llegue al suelo
 
+                Instance casoAaprender = new Instance(casosEntrenamiento.numAttributes());
+                casoAaprender.setDataset(casosEntrenamiento);                           //crea un registro de experiencia
+                casoAaprender.setValue(0, Vector3.Distance(transform.position, coche.transform.position));
+                casoAaprender.setValue(1, coche.GetComponent<Rigidbody>().velocity.magnitude);
+                casoAaprender.setValue(2, vInit);
+                casoAaprender.setValue(3, (balaLanzada.GetComponent<BalaScript>().cocheAlcanzado) ? "yes" : "no");
+                casosEntrenamiento.add(casoAaprender);                                  //guarda el registro de experiencia 
+                                                                                        //-------------------------------------------------
+                rbBala.isKinematic = true; rbBala.GetComponent<Collider>().isTrigger = true;    //...opcional: paraliza la pelota
+                Destroy(balaLanzada, 1f);                                           //...opcional: destruye la pelota en 1 seg para que ver donde cayó.            
+            }
+        }            //FIN bucle de lanzamientos con diferentes de fuerzas
+        ESTADO = "Con conocimiento";
+        //APRENDIZADE CONOCIMIENTO:  
+        saberPredecirVelocidadBala = new J48();                                               //crea un algoritmo de aprendizaje M5P (árboles de regresión)
+        casosEntrenamiento.setClassIndex(2);                                            //la variable a aprender será la fuerza Fx (id=0) dada la distancia
+        saberPredecirVelocidadBala.buildClassifier(casosEntrenamiento);
     }
     private IEnumerator PruebaDisparo()
     {
         while (true)
         {
             velocidadInicial++;
-            disparar(velocidadInicial);
+            Disparar(velocidadInicial);
             yield return new WaitForSeconds(3f);
         }
+    }
+    private IEnumerator Prueba()
+    {
+        Destroy(coche);
+        GameObject cocheInstancia= Instantiate(cochePrefab, new Vector3(0, 3.05f, 19.17f), Quaternion.identity);
+        cocheInstancia.GetComponent<CocheScript>().enabled = true;
+        cocheInstancia.GetComponent<CocheScript>().guia = puntoFinal;
+        transform.position = new Vector3(0,0.5f, 2.98f);
+        guia.transform.position = new Vector3(0, 0, 2.98f);
+        guia.GetComponent<EntrenamientoGuia>().meta = cocheInstancia;
+        coche = cocheInstancia;
+        print("Mejor velocidad: 2");
+        yield return new WaitForSeconds(5f);
+        print("Mejor velocidad: ");
+        Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());  //Crea un registro de experiencia durante el juego
+        casoPrueba.setDataset(casosEntrenamiento);
+        casoPrueba.setValue(0, Vector3.Distance(transform.position, coche.transform.position));
+        casoPrueba.setValue(1, coche.GetComponent<Rigidbody>().velocity.magnitude);
+        casoPrueba.setValue(3,"yes");                               //le pone el dato de la distancia a alcanzar
+        print("Mejor velocidad: 3");
+        float mejorVelocidad = (float)saberPredecirVelocidadBala.classifyInstance(casoPrueba);  //predice la fuerza dada la distancia utilizando el algoritmo M5P
+        print("Mejor velocidad: 5");
+        Disparar(mejorVelocidad);
     }
 }
