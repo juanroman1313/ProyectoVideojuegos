@@ -602,7 +602,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 61657695}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.773, y: 5, z: 0.71999997}
+  m_LocalPosition: {x: 2.302, y: 5, z: 0.06}
   m_LocalScale: {x: 0.35, y: 10, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1510,9 +1510,10 @@ GameObject:
   - component: {fileID: 168753309}
   - component: {fileID: 168753308}
   - component: {fileID: 168753313}
+  - component: {fileID: 168753314}
   m_Layer: 0
   m_Name: Caja
-  m_TagString: Untagged
+  m_TagString: caja
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1626,6 +1627,19 @@ FixedJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!114 &168753314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 168753307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 760d19a4119b9e045b2892e62ea78141, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  helicoptero: {fileID: 2087454982}
 --- !u!1 &209338528
 GameObject:
   m_ObjectHideFlags: 0
@@ -2613,7 +2627,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 10
+  m_Speed: 5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -2638,8 +2652,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   helicoptero: {fileID: 2087454982}
-  meta: {fileID: 350644724}
+  destinos:
+  - {fileID: 1727673161}
+  - {fileID: 397115955}
+  - {fileID: 1913300720}
   estado: 0
+  accionCaja: 0
 --- !u!54 &288512250
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2932,7 +2950,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 312878640}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.23, y: 3.5, z: 0.76}
+  m_LocalPosition: {x: 3.23, y: 3.5, z: 0.52}
   m_LocalScale: {x: 0.75, y: 7, z: 0.75}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3817,6 +3835,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1988622607}
   m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &397115955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 397115956}
+  m_Layer: 0
+  m_Name: Destino2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &397115956
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 397115955}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -19, y: 11, z: -19}
+  m_LocalScale: {x: 50, y: 50, z: 50}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 36
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &405987065
 GameObject:
@@ -5081,7 +5130,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 529223161}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.75, y: 5, z: 0.23}
+  m_LocalPosition: {x: 3.15, y: 5, z: -2.28}
   m_LocalScale: {x: 0.5, y: 10, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8613,8 +8662,6 @@ MonoBehaviour:
   modeloRuedaIzquierda: {fileID: 1002722352}
   modeloRuedaFrontalDerecha: {fileID: 873539610}
   guia: {fileID: 268555501}
-  intencionAvazar: 1
-  intencionGirar: 0
   estado: 0
 --- !u!1 &923972921
 GameObject:
@@ -11811,7 +11858,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1360642261}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.75, y: 5, z: 1.75}
+  m_LocalPosition: {x: 1.26, y: 5, z: 1.75}
   m_LocalScale: {x: 0.5, y: 10, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14818,6 +14865,37 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1727673161
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1727673162}
+  m_Layer: 0
+  m_Name: Destino1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1727673162
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1727673161}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 77.99, y: 0, z: 27.83}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 35
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1783500842
 GameObject:
   m_ObjectHideFlags: 0
@@ -16189,6 +16267,37 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 23
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1913300720
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1913300721}
+  m_Layer: 0
+  m_Name: Destino3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1913300721
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1913300720}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 32.2, y: 0, z: 72.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 37
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1942377841
 GameObject:
   m_ObjectHideFlags: 0
@@ -17478,6 +17587,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guia: {fileID: 288512243}
   engancheCadena: {fileID: 995080011}
+  choqueCaja: 0
+  enganches:
+  - {fileID: 2124582595}
+  - {fileID: 1478620656}
+  - {fileID: 902020317}
+  - {fileID: 1707227866}
+  - {fileID: 30875152}
+  - {fileID: 1460752306}
+  - {fileID: 295847714}
+  - {fileID: 1261245269}
+  - {fileID: 915145627}
+  - {fileID: 995080011}
 --- !u!54 &2087454985
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -17636,6 +17757,7 @@ GameObject:
   - component: {fileID: 2124582596}
   - component: {fileID: 2124582600}
   - component: {fileID: 2124582601}
+  - component: {fileID: 2124582602}
   m_Layer: 0
   m_Name: Iman
   m_TagString: helicoptero
@@ -17753,6 +17875,19 @@ FixedJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!114 &2124582602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124582595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39ef586537e26de4db3b3794c3cff620, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  helicoptero: {fileID: 2087454982}
 --- !u!1 &2135145580
 GameObject:
   m_ObjectHideFlags: 0

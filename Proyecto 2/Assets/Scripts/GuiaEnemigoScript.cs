@@ -18,7 +18,7 @@ public class GuiaEnemigoScript : MonoBehaviour
 
     void Update()
     {
-        print("Estado guia: " + estado);
+        //print("Estado guia: " + estado);
         switch (estado)
         {
             case Estado.BAJOHELICOPTERO:

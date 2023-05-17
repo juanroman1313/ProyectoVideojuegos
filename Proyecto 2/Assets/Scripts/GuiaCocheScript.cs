@@ -21,7 +21,7 @@ public class GuiaCocheScript : MonoBehaviour
 
     void Update()
     {
-        print("Estado guia: " + estado);
+        //print("Estado guia: " + estado);
         switch (estado)
         {
             case Estado.BAJOCOCHE:

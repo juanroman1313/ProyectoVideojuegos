@@ -60,8 +60,13 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         if (transform.position.y >= alturaDeseada - 1)
         {
             estado = Estado.SEGUIRGUIA;
+<<<<<<< HEAD
             guia.GetComponent<EntrenamientoGuia>().CambiarAIrMeta();
             StartCoroutine("PruebaDisparo");
+=======
+            guia.GetComponent<GuiaScript>().CambiarAIrDestinos();
+            StartCoroutine("RutinaEntrenamiento");
+>>>>>>> dcff2ecf480fcc6eb4dcad60c1de567a3f332159
         }
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)

@@ -49,8 +49,8 @@ public class CocheScript : MonoBehaviour
     }
     private void Avanza()
     {
-        print("Angulo: " + anguloObjeto);
-        print("Distancia Coche: " + distancia);
+        //print("Angulo: " + anguloObjeto);
+        //print("Distancia Coche: " + distancia);
         if (distancia > rb.velocity.magnitude) 
         {
             modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal);
@@ -76,8 +76,8 @@ public class CocheScript : MonoBehaviour
     }
     private void GirarIzq()
     {
-        print("Angulo: " + anguloObjeto);
-        print("Distancia Coche: " + distancia);
+        //print("Angulo: " + anguloObjeto);
+        //print("Distancia Coche: " + distancia);
         modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal*anguloObjeto);
         modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddTorque(modeloRuedaFrontalDerecha.right * distancia * fuerzaFrontal);
         if(anguloObjeto >= -5)
@@ -88,8 +88,8 @@ public class CocheScript : MonoBehaviour
     }
     private void GirarDer()
     {
-        print("Angulo: " + anguloObjeto);
-        print("Distancia Coche: " + distancia);
+        //print("Angulo: " + anguloObjeto);
+        //print("Distancia Coche: " + distancia);
         modeloRuedaIzquierda.gameObject.GetComponent<Rigidbody>().AddTorque(modeloRuedaIzquierda.right * distancia * fuerzaFrontal);
         modeloRuedaFrontalDerecha.gameObject.GetComponent<Rigidbody>().AddTorque(modeloRuedaFrontalDerecha.right * distancia * fuerzaFrontal * -1 *anguloObjeto);
         if (anguloObjeto <= 5)
