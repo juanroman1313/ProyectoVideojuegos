@@ -29,6 +29,8 @@ public class EntrenamientoHelicoptero : MonoBehaviour
 
     public GameObject bala;
     public GameObject canon;
+
+    private float velocidadInicial;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -36,6 +38,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         masa = rb.mass; // Masa del helicoptero (1000 Kg) + masa imán + masa cadenas.
         fuerzaLevitacion = -(Physics.gravity.y * masa); // Fuerza de levitación del helicoptero (Fuerza necesaria para anular las fuerzas)
+        velocidadInicial = 5f;
     }
 
     private void FixedUpdate()
@@ -57,8 +60,8 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         if (transform.position.y >= alturaDeseada - 1)
         {
             estado = Estado.SEGUIRGUIA;
-            guia.GetComponent<GuiaScript>().CambiarAIrMeta();
-            StartCoroutine("RutinaEntrenamiento");
+            guia.GetComponent<EntrenamientoGuia>().CambiarAIrMeta();
+            StartCoroutine("PruebaDisparo");
         }
     }
     private void AlcanzarAltura(float altura, float velocidadVertical)
@@ -180,8 +183,8 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
         Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
         float masaBala = rbBala.mass;
-        float fuerza = masa * vInitBala;
-        rb.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
+        float fuerza = masaBala * vInitBala;
+        rbBala.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
     }
     private IEnumerator RutinaEntrenamiento()
     {
@@ -191,6 +194,11 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     }
     private IEnumerator PruebaDisparo()
     {
-        yield return null;
+        while (true)
+        {
+            velocidadInicial++;
+            disparar(velocidadInicial);
+            yield return new WaitForSeconds(3f);
+        }
     }
 }
