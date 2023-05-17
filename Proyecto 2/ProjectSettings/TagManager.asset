@@ -9,6 +9,7 @@ TagManager:
   - edificio
   - suelo
   - caja
+  - coche
   layers:
   - Default
   - TransparentFX

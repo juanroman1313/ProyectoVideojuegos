@@ -2,5 +2,4 @@
 @attribute  distancia	numeric
 @attribute	vCoche	numeric
 @attribute	vBala	numeric
-@attribute	cocheAlcanzado {"si","no"}
 @data 

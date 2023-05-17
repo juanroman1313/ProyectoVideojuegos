@@ -11,8 +11,8 @@ public class BalaScript : MonoBehaviour
         cocheAlcanzado = false;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("coche")) cocheAlcanzado = true;
+        if (other.gameObject.CompareTag("coche")) cocheAlcanzado = true;
     }
 }
