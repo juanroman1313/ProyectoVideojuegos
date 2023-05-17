@@ -211,11 +211,11 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     {
         casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Scripts/Experiencias.arff"));
         float velocidadBala;
-        for(int i = 0; i < 1; i++)
+        for(int i = 0; i < 5; i++)
         {
             velocidadBala = UnityEngine.Random.Range(2f, 10f);
             guia.GetComponent<EntrenamientoGuia>().CambiarVelocidad(velocidadBala);
-            for (float vInit = velocidadInicial; vInit <= 100; vInit += 5)                   //BUCLE de planificación de la fuerza FX durante el entrenamiento
+            for (float vInit = velocidadInicial; vInit <= 50; vInit += 5)                   //BUCLE de planificación de la fuerza FX durante el entrenamiento
             {
                 GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
                 Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
@@ -238,8 +238,8 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         }            //FIN bucle de lanzamientos con diferentes de fuerzas
         ESTADO = "Con conocimiento";
         //APRENDIZADE CONOCIMIENTO:  
-        saberPredecirVelocidadBala = new J48();                                               //crea un algoritmo de aprendizaje M5P (árboles de regresión)
-        casosEntrenamiento.setClassIndex(2);                                            //la variable a aprender será la fuerza Fx (id=0) dada la distancia
+        saberPredecirVelocidadBala = new weka.classifiers.trees.J48();                                               //crea un algoritmo de aprendizaje J48
+        casosEntrenamiento.setClassIndex(2);                                         //la variable a aprender será la fuerza Fx (id=0) dada la distancia
         saberPredecirVelocidadBala.buildClassifier(casosEntrenamiento);
     }
     private IEnumerator PruebaDisparo()
@@ -264,9 +264,14 @@ public class EntrenamientoHelicoptero : MonoBehaviour
         print("Mejor velocidad: 2");
         yield return new WaitForSeconds(5f);
         print("Mejor velocidad: ");
+        casosEntrenamiento.setClassIndex(casosEntrenamiento.numAttributes() - 1);
+        
         Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());  //Crea un registro de experiencia durante el juego
+        print("caca1");
         casoPrueba.setDataset(casosEntrenamiento);
+        print("caca2");
         casoPrueba.setValue(0, Vector3.Distance(transform.position, coche.transform.position));
+        print("caca3");
         casoPrueba.setValue(1, coche.GetComponent<Rigidbody>().velocity.magnitude);
         casoPrueba.setValue(3,"yes");                               //le pone el dato de la distancia a alcanzar
         print("Mejor velocidad: 3");
