@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using static sun.awt.geom.AreaOp;
 
 public class HelicopteroScript : MonoBehaviour
 {
-    private enum Estado {DESPEGAR, TOMARCAJA, SEGUIRGUIA, DEJARCAJA, ESQUIVAR}
+    private enum Estado {DESPEGAR, TOMARCAJA, SEGUIRGUIA, DEJARCAJA, ESQUIVAR, ATACAR}
     private Estado estado;
     private const float VELVERT = 0.2f;
     private const float VELHOR = 100f;
@@ -34,6 +35,9 @@ public class HelicopteroScript : MonoBehaviour
     private float alturaObjetivoSubida;
     public GameObject[] enganches;
     public GameObject caja;
+
+    public GameObject bala;
+    public GameObject canon;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -62,17 +66,20 @@ public class HelicopteroScript : MonoBehaviour
             case Estado.DESPEGAR:               // SEGUIRGUIA
                 Despegar();
                 break;
-            case Estado.TOMARCAJA:
+            case Estado.TOMARCAJA:              // SEGUIRGUIA
                 TomarCaja();
                 break;
-            case Estado.SEGUIRGUIA:             // ESQUIVAR
+            case Estado.SEGUIRGUIA:             // ESQUIVAR, TOMARCAJA o DEJARCAJA
                 SeguirGuia();
                 break;
-            case Estado.DEJARCAJA:
+            case Estado.DEJARCAJA:              // SEGUIRGUIA
                 DejarCaja();
                 break;
             case Estado.ESQUIVAR:               // SEGUIRGUIA
                 Esquivar();
+                break;
+            case Estado.ATACAR:
+                Atacar();
                 break;
         }
     }
@@ -198,6 +205,7 @@ public class HelicopteroScript : MonoBehaviour
             estado = Estado.TOMARCAJA;
             return;
         }
+        // Condición para empezar a bajar y soltar la caja.
         if(cajaTomada && !cajaSoltada
             && Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
             && guia.GetComponent<GuiaScript>().accionCaja)
@@ -205,6 +213,16 @@ public class HelicopteroScript : MonoBehaviour
             alturaObjetivoSubida = alturaDeseada;
             StartCoroutine("Bajar");
             estado = Estado.DEJARCAJA;
+            return;
+        }
+        // Condición para empezar el ataque.
+        if (Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
+            && guia.GetComponent<GuiaScript>().ataque)
+        {
+            alturaDeseada = 15;
+            guia.GetComponent<GuiaScript>().SiguienteDestino();
+            guia.GetComponent<GuiaScript>().ataque = false;
+            estado = Estado.ATACAR;
             return;
         }
         // Si detectamos algún obstáculo lateral, entramos en el if y cambiamos de estado.
@@ -430,5 +448,19 @@ public class HelicopteroScript : MonoBehaviour
         {
             rb.AddRelativeTorque(ejeGiro * velocidadGiro);
         }
+    }
+    private void Atacar()
+    {
+        AlcanzarAltura(alturaDeseada, VELVERT);
+        AlcanzarPosicion(guia, VELHOR);
+    }
+    // Método para disparar.
+    private void disparar(float vInitBala)
+    {
+        GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
+        Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
+        float masaBala = rbBala.mass;
+        float fuerza = masaBala * vInitBala;
+        rbBala.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
     }
 }

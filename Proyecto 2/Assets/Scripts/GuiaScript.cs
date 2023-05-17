@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,6 +14,8 @@ public class GuiaScript : MonoBehaviour
     public enum Estado {BAJOHELICOPTERO, IRDESTINOS}
     public Estado estado;
     public bool accionCaja;
+    public bool ataque;
+    public GameObject coche;
     void Start()
     {
         agente = GetComponent<NavMeshAgent>();
@@ -21,6 +24,7 @@ public class GuiaScript : MonoBehaviour
         posDestino = 0;
         destinoAct = destinos[posDestino];
         accionCaja = false;
+        ataque = false;
     }
 
     void Update()
@@ -44,6 +48,15 @@ public class GuiaScript : MonoBehaviour
         if(agente.remainingDistance <= agente.stoppingDistance && (posDestino == 0 || posDestino == 1))
         {
             accionCaja = true;
+        }
+        if(agente.remainingDistance <= agente.stoppingDistance && posDestino == 2)
+        {
+            ataque = true;
+        }
+        if(posDestino == 3)
+        {
+            GetComponent<NavMeshAgent>().speed = destinoAct.GetComponent<Rigidbody>().velocity.magnitude;
+            agente.destination = new Vector3(destinoAct.transform.position.x, 5, destinoAct.transform.position.z); // para seguir al coche.
         }
     }
     private void BajoHelicoptero()
