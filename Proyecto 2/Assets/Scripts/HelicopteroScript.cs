@@ -490,6 +490,7 @@ public class HelicopteroScript : MonoBehaviour
         print("ALTURA DESEADA: " + alturaDeseada);
         AlcanzarAltura(alturaDeseada, VELVERT);
         AlcanzarPosicion(guia, VELHOR);
+        canon.transform.LookAt(new Vector3(coche.transform.position.x, canon.transform.position.y, coche.transform.position.z));
     }
     // Método para disparar.
     private void Disparar(float vInitBala)
