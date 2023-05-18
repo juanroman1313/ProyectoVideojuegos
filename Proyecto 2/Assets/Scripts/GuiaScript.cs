@@ -57,6 +57,7 @@ public class GuiaScript : MonoBehaviour
         {
             GetComponent<NavMeshAgent>().speed = destinoAct.GetComponent<Rigidbody>().velocity.magnitude;
             agente.destination = new Vector3(destinoAct.transform.position.x, 5, destinoAct.transform.position.z); // para seguir al coche.
+            if (Vector3.Distance(transform.position, coche.transform.position) <= 5) helicoptero.GetComponent<HelicopteroScript>().cercaCoche = true;
         }
     }
     private void BajoHelicoptero()

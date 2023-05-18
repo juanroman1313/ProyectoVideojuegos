@@ -46,6 +46,7 @@ public class GuiaCocheScript : MonoBehaviour
         if (agente.remainingDistance <= agente.stoppingDistance)
         {
             puntoActual++;
+            if (puntoActual == 4) puntoActual = 0;
             agente.SetDestination(puntos[puntoActual].transform.position);
         }
     }
