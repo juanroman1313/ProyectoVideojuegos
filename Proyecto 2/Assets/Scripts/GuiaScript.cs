@@ -44,7 +44,7 @@ public class GuiaScript : MonoBehaviour
     private void IrDestinos()
     {
         // agente.destination = destinoAct.transform.position;
-        print(accionCaja);
+        //print(accionCaja);
         if(agente.remainingDistance <= agente.stoppingDistance && (posDestino == 0 || posDestino == 1))
         {
             accionCaja = true;

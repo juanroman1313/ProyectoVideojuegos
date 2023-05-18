@@ -124,6 +124,8 @@ public class HelicopteroScript : MonoBehaviour
     {
         AlcanzarAltura(alturaDeseada, VELVERT);
         AlcanzarPosicion(guia, VELHOR);
+        print("Choque caja " + choqueCaja);
+        print("Caja tomada " + cajaTomada);
         if (choqueCaja && !cajaTomada)
         {
             StartCoroutine(Subir(ALTURABASE));
@@ -132,6 +134,7 @@ public class HelicopteroScript : MonoBehaviour
         }
         if (cajaTomada && alturaDeseada >= ALTURABASE)
         {
+            paraSubir = true;
             guia.GetComponent<GuiaScript>().SiguienteDestino();
             estado = Estado.SEGUIRGUIA;
         }
@@ -155,9 +158,9 @@ public class HelicopteroScript : MonoBehaviour
             }
             masa -= (5 * 9 + 10);
             enganche = false;
+            paraSubir = true;
             guia.GetComponent<GuiaScript>().SiguienteDestino();
             estado = Estado.SEGUIRGUIA;
-            paraSubir = true;
         }
     }
     // Método para hacer que el helicóptero alcance una altura determinada, manejando la variable alturaDeseada.
@@ -215,17 +218,19 @@ public class HelicopteroScript : MonoBehaviour
     // Corutina para subir lentamente.
     private IEnumerator Subir(float alturaObjetivo)
     {
-        while (alturaDeseada < alturaObjetivo && !paraSubir)
+        print(paraSubir);
+        while (!paraSubir)
         {
             print("Subiendo...");
             alturaDeseada += 0.1f;
             yield return new WaitForSeconds(0.3f);
         }
+        paraSubir = false;
     }
     private void SeguirGuia()
     {
         // Condición para empezar a bajar y tomar la caja.
-        print("Distancia a guia: " + Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position));
+        //print("Distancia a guia: " + Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position));
         if (!cajaTomada
             && Vector3.Distance(new Vector3(transform.position.x, guia.transform.position.y, transform.position.z), guia.transform.position) <= 0.005f
             && guia.GetComponent<GuiaScript>().accionCaja)
