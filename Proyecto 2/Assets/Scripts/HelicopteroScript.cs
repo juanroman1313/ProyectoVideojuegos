@@ -203,7 +203,7 @@ public class HelicopteroScript : MonoBehaviour
     // Corutina para bajar hasta tomar la caja.
     private IEnumerator Bajar()
     {
-        print(choqueCaja);
+        //print(choqueCaja);
         while (!choqueCaja)
         {
             print("Bajando...");
