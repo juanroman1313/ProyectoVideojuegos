@@ -53,6 +53,8 @@ public class HelicopteroScript : MonoBehaviour
     weka.classifiers.trees.M5P saberPredecirVelocidadBala;
     weka.core.Instances casosEntrenamiento;
     public bool cercaCoche;
+
+    private bool paraSubir;
     void Start()
     {
         estado = Estado.DESPEGAR;
@@ -71,11 +73,17 @@ public class HelicopteroScript : MonoBehaviour
         cajaTomada = false;
         choqueCaja = false;
         cajaSoltada = false;
+
+
+        //Cargamos las experiencias finales
         casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Scripts/Finales_Experiencias.arff"));
-        saberPredecirVelocidadBala = new weka.classifiers.trees.M5P();                                               //crea un algoritmo de aprendizaje M5P
-        casosEntrenamiento.setClassIndex(2);                                         //la variable a aprender será la fuerza Fx (id=0) dada la distancia
+        saberPredecirVelocidadBala = new weka.classifiers.trees.M5P();       //crea un algoritmo de aprendizaje M5P
+        casosEntrenamiento.setClassIndex(2);                //la variable a aprender será la velocidad inicial de la bala dada la distancia
         saberPredecirVelocidadBala.buildClassifier(casosEntrenamiento);
+
+
         cercaCoche = false;
+        paraSubir = false;
     }
     private void FixedUpdate()
     {
@@ -149,6 +157,7 @@ public class HelicopteroScript : MonoBehaviour
             enganche = false;
             guia.GetComponent<GuiaScript>().SiguienteDestino();
             estado = Estado.SEGUIRGUIA;
+            paraSubir = true;
         }
     }
     // Método para hacer que el helicóptero alcance una altura determinada, manejando la variable alturaDeseada.
@@ -206,7 +215,7 @@ public class HelicopteroScript : MonoBehaviour
     // Corutina para subir lentamente.
     private IEnumerator Subir(float alturaObjetivo)
     {
-        while (alturaDeseada < alturaObjetivo)
+        while (alturaDeseada < alturaObjetivo && !paraSubir)
         {
             print("Subiendo...");
             alturaDeseada += 0.1f;
@@ -473,9 +482,9 @@ public class HelicopteroScript : MonoBehaviour
     }
     private void Atacar()
     {
+        print("ALTURA DESEADA: " + alturaDeseada);
         AlcanzarAltura(alturaDeseada, VELVERT);
         AlcanzarPosicion(guia, VELHOR);
-        print("CERCA COCHE 1: " + cercaCoche);
     }
     // Método para disparar.
     private void Disparar(float vInitBala)
@@ -491,14 +500,19 @@ public class HelicopteroScript : MonoBehaviour
     {
         print("RUTINA ATAQUE");
         print("CERCA COCHE: " + cercaCoche);
+        //Esperamos hasta que la variable sea true
         yield return new WaitUntil(() => cercaCoche == true);
+        //Disparamos una bala cada 3 segundos
         while (cercaCoche)
         {
+            //Creamos el caso de prueba
             Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());
             casoPrueba.setDataset(casosEntrenamiento);
             casoPrueba.setValue(0, Vector3.Distance(transform.position, coche.transform.position));
             casoPrueba.setValue(1, coche.GetComponent<Rigidbody>().velocity.magnitude);
-            float mejorVelocidad = (float)saberPredecirVelocidadBala.classifyInstance(casoPrueba);
+            //El algoritmo M5P predice la velocidad inicial de la bala
+            float mejorVelocidad = (float)saberPredecirVelocidadBala.classifyInstance(casoPrueba); 
+            //Utilizamos el método Disparar() para disparar la bala.
             Disparar(mejorVelocidad);
             yield return new WaitForSeconds(3f);
         }

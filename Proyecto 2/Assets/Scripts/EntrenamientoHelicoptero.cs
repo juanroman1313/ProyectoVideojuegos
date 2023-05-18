@@ -211,12 +211,13 @@ public class EntrenamientoHelicoptero : MonoBehaviour
     private IEnumerator RutinaEntrenamiento()
     {
         casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Scripts/Experiencias.arff"));
-        float velocidadBala;
+        float velocidadGuia;
         for(int i = 0; i < 10; i++)
         {
-            velocidadBala = UnityEngine.Random.Range(2f, 10f);
-            guia.GetComponent<EntrenamientoGuia>().CambiarVelocidad(velocidadBala);
-            for (float vInit = velocidadInicial; vInit <= 50; vInit += 5)                   //BUCLE de planificación de la fuerza FX durante el entrenamiento
+            velocidadGuia = UnityEngine.Random.Range(2f, 10f);
+            guia.GetComponent<EntrenamientoGuia>().CambiarVelocidad(velocidadGuia);
+            //BUCLE de planificación de la velocidad inicial durante el entrenamiento
+            for (float vInit = velocidadInicial; vInit <= 50; vInit += 5)                   
             {
                 GameObject balaLanzada = Instantiate(bala, canon.transform.position, canon.transform.rotation) as GameObject;
                 Rigidbody rbBala = balaLanzada.GetComponent<Rigidbody>();
@@ -224,7 +225,7 @@ public class EntrenamientoHelicoptero : MonoBehaviour
                 float fuerza = masaBala * vInit;
                 balaLanzada.GetComponent<SphereCollider>().isTrigger = true;
                 rbBala.AddForce(canon.transform.forward * fuerza, ForceMode.Impulse);
-                yield return new WaitUntil(() => (rbBala.transform.position.y <= 2.5));        //... y espera a que la pelota llegue al suelo
+                yield return new WaitUntil(() => (rbBala.transform.position.y <= 2.5));        //... y espera a que la pelota llegue a una altura
                 
                     Instance casoAaprender = new Instance(casosEntrenamiento.numAttributes());
                     casoAaprender.setDataset(casosEntrenamiento);                           //crea un registro de experiencia
@@ -233,17 +234,17 @@ public class EntrenamientoHelicoptero : MonoBehaviour
                     casoAaprender.setValue(2, vInit);
                     casosEntrenamiento.add(casoAaprender);
                                                 //guarda el registro de experiencia 
-                                                                                    //-------------------------------------------------
-                rbBala.isKinematic = true;    //...opcional: paraliza la pelota
-                Destroy(balaLanzada, 1f);                                           //...opcional: destruye la pelota en 1 seg para que ver donde cayó.            
+                                                                                   
+                rbBala.isKinematic = true;    
+                Destroy(balaLanzada, 1f);                                                     
             }
-        }            //FIN bucle de lanzamientos con diferentes de fuerzas
+        }            //FIN bucle de lanzamientos con diferentes de velocidades
         ESTADO = "Con conocimiento";
         //APRENDIZADE CONOCIMIENTO:  
-        saberPredecirVelocidadBala = new weka.classifiers.trees.M5P();                                               //crea un algoritmo de aprendizaje M5P
-        casosEntrenamiento.setClassIndex(2);                                         //la variable a aprender será la fuerza Fx (id=0) dada la distancia
+        saberPredecirVelocidadBala = new weka.classifiers.trees.M5P();  //crea un algoritmo de aprendizaje M5P
+        casosEntrenamiento.setClassIndex(2);              //la variable a aprender será velocidad inicial de la bala
         saberPredecirVelocidadBala.buildClassifier(casosEntrenamiento);
-
+        //Guardamos los datos
         File salida = new File("Assets/Scripts/Finales_Experiencias.arff");
         if (!salida.exists())
             System.IO.File.Create(salida.getAbsoluteFile().toString()).Dispose();
